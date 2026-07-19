@@ -28,6 +28,7 @@ PulseCheck showcases production-minded Python backend skills:
 
 | Feature | Description |
 |---|---|
+| Dashboard UI | Landing page, auth, monitor dashboard, detail drawer |
 | User auth | Register, login (OAuth2 password flow), `/me` |
 | Monitors | Create / list / update / delete URL monitors |
 | Live checks | Trigger an on-demand HTTP probe |
@@ -64,7 +65,7 @@ cp .env.example .env
 
 Edit `.env` and set a strong `SECRET_KEY`.
 
-### 3. Run the API
+### 3. Run the API + dashboard
 
 ```bash
 uvicorn app.main:app --reload
@@ -72,6 +73,7 @@ uvicorn app.main:app --reload
 
 Open:
 
+- **Dashboard UI** → http://127.0.0.1:8000/
 - API docs → http://127.0.0.1:8000/docs
 - Health check → http://127.0.0.1:8000/health
 
@@ -136,7 +138,10 @@ pulsecheck/
 │   ├── schemas/       # Pydantic schemas
 │   ├── routers/       # API route handlers
 │   ├── services/      # business logic (probe + stats)
+│   ├── static/        # dashboard CSS/JS
+│   ├── templates/     # dashboard HTML
 │   ├── deps.py        # shared FastAPI dependencies
+│   ├── web.py         # UI routes
 │   └── main.py        # app factory
 ├── tests/             # pytest suite
 ├── Dockerfile

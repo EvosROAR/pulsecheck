@@ -72,6 +72,13 @@ async def test_health(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
+async def test_dashboard_home(client: AsyncClient) -> None:
+    response = await client.get("/")
+    assert response.status_code == 200
+    assert "PulseCheck" in response.text
+
+
+@pytest.mark.asyncio
 async def test_register_login_and_me(client: AsyncClient) -> None:
     token = await _register_and_login(client)
     me = await client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {token}"})

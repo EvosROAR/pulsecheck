@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PulseCheck — Website uptime monitoring</title>
+    <meta
+      name="description"
+      content="Pantau uptime website secara real-time. Cek status, latency, dan statistik ketersediaan dari satu dashboard."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/css/styles.css" />
+  </head>
+  <body>
+    <div class="noise" aria-hidden="true"></div>
+
+    <!-- LANDING -->
+    <section id="view-landing" class="view view-landing is-active">
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="PulseCheck home">
+          <span class="brand-mark" aria-hidden="true"></span>
+          PulseCheck
+        </a>
+        <button type="button" class="btn btn-ghost" data-goto="auth">Masuk</button>
+      </header>
+
+      <div class="hero">
+        <div class="hero-copy">
+          <p class="brand-lockup">PulseCheck</p>
+          <h1>Rasakan denyut situs Anda.</h1>
+          <p class="lede">
+            Pantau uptime, latency, dan status HTTP dari satu dashboard yang ringkas.
+          </p>
+          <div class="cta-row">
+            <button type="button" class="btn btn-primary" data-goto="auth" data-mode="register">
+              Mulai gratis
+            </button>
+            <button type="button" class="btn btn-secondary" data-goto="auth" data-mode="login">
+              Sudah punya akun
+            </button>
+          </div>
+        </div>
+
+        <div class="hero-visual" aria-hidden="true">
+          <svg class="pulse-wave" viewBox="0 0 1200 420" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="waveFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="rgba(14, 184, 166, 0.35)" />
+                <stop offset="100%" stop-color="rgba(14, 184, 166, 0)" />
+              </linearGradient>
+            </defs>
+            <path
+              class="wave-fill"
+              d="M0,260 C120,220 180,120 260,160 C340,200 380,300 460,280 C540,260 580,140 680,150 C780,160 820,300 920,290 C1020,280 1080,180 1200,200 L1200,420 L0,420 Z"
+            />
+            <path
+              class="wave-line"
+              d="M0,260 C120,220 180,120 260,160 C340,200 380,300 460,280 C540,260 580,140 680,150 C780,160 820,300 920,290 C1020,280 1080,180 1200,200"
+            />
+          </svg>
+          <div class="live-pill">
+            <span class="live-dot"></span>
+            Live probe ready
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- AUTH -->
+    <section id="view-auth" class="view view-auth">
+      <header class="topbar">
+        <a class="brand" href="/" data-goto="landing">
+          <span class="brand-mark" aria-hidden="true"></span>
+          PulseCheck
+        </a>
+        <button type="button" class="btn btn-ghost" data-goto="landing">Kembali</button>
+      </header>
+
+      <div class="auth-shell">
+        <div class="auth-intro">
+          <h2 id="auth-title">Masuk ke dashboard</h2>
+          <p id="auth-subtitle">Pantau monitor Anda dan jalankan pengecekan uptime kapan saja.</p>
+        </div>
+
+        <form id="auth-form" class="auth-form" novalidate>
+          <div class="tabs" role="tablist">
+            <button type="button" class="tab is-active" data-mode="login" role="tab">Masuk</button>
+            <button type="button" class="tab" data-mode="register" role="tab">Daftar</button>
+          </div>
+
+          <label class="field register-only">
+            <span>Nama lengkap</span>
+            <input id="full_name" name="full_name" type="text" autocomplete="name" placeholder="Nuno Tamada" />
+          </label>
+
+          <label class="field">
+            <span>Email</span>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              required
+              autocomplete="email"
+              placeholder="kamu@email.com"
+            />
+          </label>
+
+          <label class="field">
+            <span>Password</span>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              required
+              minlength="8"
+              autocomplete="current-password"
+              placeholder="Minimal 8 karakter"
+            />
+          </label>
+
+          <p id="auth-error" class="form-error" hidden></p>
+
+          <button type="submit" class="btn btn-primary btn-block" id="auth-submit">Masuk</button>
+          <p class="auth-hint">
+            Demo: <code>demo@pulsecheck.dev</code> / <code>secret123</code>
+          </p>
+        </form>
+      </div>
+    </section>
+
+    <!-- DASHBOARD -->
+    <section id="view-dashboard" class="view view-dashboard">
+      <header class="topbar topbar-dash">
+        <a class="brand" href="/" data-goto="dashboard">
+          <span class="brand-mark" aria-hidden="true"></span>
+          PulseCheck
+        </a>
+        <div class="topbar-right">
+          <span id="user-chip" class="user-chip">—</span>
+          <button type="button" class="btn btn-ghost" id="btn-logout">Keluar</button>
+        </div>
+      </header>
+
+      <main class="dash">
+        <section class="dash-hero">
+          <div>
+            <h2>Dashboard</h2>
+            <p>Ringkasan kesehatan semua monitor Anda.</p>
+          </div>
+          <button type="button" class="btn btn-primary" id="btn-open-create">+ Monitor baru</button>
+        </section>
+
+        <section class="stat-strip" aria-label="Ringkasan">
+          <div class="stat">
+            <span class="stat-label">Total monitor</span>
+            <strong id="stat-total">0</strong>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Sedang up</span>
+            <strong id="stat-up" class="tone-up">0</strong>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Sedang down</span>
+            <strong id="stat-down" class="tone-down">0</strong>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Avg latency</span>
+            <strong id="stat-latency">—</strong>
+          </div>
+        </section>
+
+        <section class="monitors-section">
+          <div class="section-head">
+            <h3>Monitor</h3>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-refresh">Refresh</button>
+          </div>
+          <div id="monitors-empty" class="empty-state" hidden>
+            <h4>Belum ada monitor</h4>
+            <p>Tambahkan URL pertama Anda untuk mulai memantau uptime.</p>
+            <button type="button" class="btn btn-primary" id="btn-empty-create">Tambah monitor</button>
+          </div>
+          <div id="monitors-list" class="monitors-list"></div>
+        </section>
+      </main>
+    </section>
+
+    <!-- DETAIL DRAWER -->
+    <aside id="detail-drawer" class="drawer" aria-hidden="true">
+      <div class="drawer-backdrop" data-close-drawer></div>
+      <div class="drawer-panel" role="dialog" aria-modal="true" aria-labelledby="detail-title">
+        <header class="drawer-head">
+          <div>
+            <p class="eyebrow">Detail monitor</p>
+            <h3 id="detail-title">—</h3>
+            <a id="detail-url" class="detail-url" href="#" target="_blank" rel="noopener">—</a>
+          </div>
+          <button type="button" class="icon-btn" data-close-drawer aria-label="Tutup">×</button>
+        </header>
+
+        <div class="detail-stats">
+          <div>
+            <span>Uptime</span>
+            <strong id="detail-uptime">—</strong>
+          </div>
+          <div>
+            <span>Avg latency</span>
+            <strong id="detail-latency">—</strong>
+          </div>
+          <div>
+            <span>Last status</span>
+            <strong id="detail-status">—</strong>
+          </div>
+          <div>
+            <span>Total checks</span>
+            <strong id="detail-checks">—</strong>
+          </div>
+        </div>
+
+        <div class="drawer-actions">
+          <button type="button" class="btn btn-primary" id="btn-run-check">Jalankan check</button>
+          <button type="button" class="btn btn-danger" id="btn-delete-monitor">Hapus</button>
+        </div>
+
+        <div class="history">
+          <h4>Riwayat check</h4>
+          <div id="checks-list" class="checks-list"></div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- CREATE MODAL -->
+    <div id="create-modal" class="modal" aria-hidden="true">
+      <div class="modal-backdrop" data-close-modal></div>
+      <form id="create-form" class="modal-panel" role="dialog" aria-modal="true">
+        <header class="modal-head">
+          <h3>Monitor baru</h3>
+          <button type="button" class="icon-btn" data-close-modal aria-label="Tutup">×</button>
+        </header>
+
+        <label class="field">
+          <span>Nama</span>
+          <input id="monitor-name" name="name" required maxlength="120" placeholder="Landing page" />
+        </label>
+        <label class="field">
+          <span>URL</span>
+          <input
+            id="monitor-url"
+            name="url"
+            type="url"
+            required
+            placeholder="https://contoh.com"
+          />
+        </label>
+        <div class="field-row">
+          <label class="field">
+            <span>Interval (detik)</span>
+            <input id="monitor-interval" name="interval_seconds" type="number" min="30" max="3600" value="60" />
+          </label>
+          <label class="field">
+            <span>Expected status</span>
+            <input id="monitor-status" name="expected_status" type="number" min="100" max="599" value="200" />
+          </label>
+        </div>
+
+        <p id="create-error" class="form-error" hidden></p>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" data-close-modal>Batal</button>
+          <button type="submit" class="btn btn-primary">Simpan</button>
+        </div>
+      </form>
+    </div>
+
+    <div id="toast" class="toast" hidden></div>
+
+    <script src="/static/js/app.js" defer></script>
+  </body>
+</html>
