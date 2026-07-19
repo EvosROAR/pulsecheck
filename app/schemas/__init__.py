@@ -120,3 +120,10 @@ class HealthResponse(BaseModel):
     status: str
     app: str
     version: str
+
+
+class MetaResponse(BaseModel):
+    app: str
+    version: str
+    probe_region: str
+    probe_note: str

@@ -12,6 +12,7 @@ const state = {
   monitors: [],
   statsById: {},
   selectedId: null,
+  probeRegion: "local",
 };
 
 const els = {
@@ -45,6 +46,24 @@ const els = {
   statDown: document.getElementById("stat-down"),
   statLatency: document.getElementById("stat-latency"),
 };
+
+function renderProbeNotes() {
+  const text = t("settings.probeNote", { region: state.probeRegion || "server" });
+  const note = document.getElementById("probe-note");
+  const detailNote = document.getElementById("detail-probe-note");
+  if (note) note.textContent = text;
+  if (detailNote) detailNote.textContent = text;
+}
+
+async function loadMeta() {
+  try {
+    const meta = await fetch("/api/v1/meta").then((r) => r.json());
+    state.probeRegion = meta.probe_region || "server";
+  } catch {
+    state.probeRegion = "server";
+  }
+  renderProbeNotes();
+}
 
 function showToast(message) {
   els.toast.textContent = message;
@@ -296,6 +315,7 @@ async function enterDashboard() {
 }
 
 async function boot() {
+  await loadMeta();
   if (!state.token) {
     showView("landing");
     return;
@@ -441,6 +461,7 @@ document.getElementById("webhook-form").addEventListener("submit", async (event)
 
 window.onLocaleChange = () => {
   setAuthMode(state.mode);
+  renderProbeNotes();
   renderDashboard();
   if (state.selectedId) {
     openDetail(state.selectedId);

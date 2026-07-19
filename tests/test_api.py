@@ -86,6 +86,15 @@ async def test_dashboard_home(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
+async def test_meta_probe_region(client: AsyncClient) -> None:
+    response = await client.get("/api/v1/meta")
+    assert response.status_code == 200
+    body = response.json()
+    assert "probe_region" in body
+    assert "probe_note" in body
+
+
+@pytest.mark.asyncio
 async def test_register_login_and_me(client: AsyncClient) -> None:
     token = await _register_and_login(client)
     me = await client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {token}"})

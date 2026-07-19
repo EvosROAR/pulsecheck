@@ -27,6 +27,8 @@ class Settings(BaseSettings):
     default_interval_seconds: int = 60
     scheduler_enabled: bool = True
     scheduler_tick_seconds: int = 15
+    # Shown in UI so users know checks run from the server, not their PC.
+    probe_region: str = "local"
     cors_origins: list[str] = ["*"]
 
 

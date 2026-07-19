@@ -14,6 +14,8 @@
       href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap"
       rel="stylesheet"
     />
+    <link rel="icon" href="/static/img/logo.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/static/img/logo.png" />
     <link rel="stylesheet" href="/static/css/styles.css" />
   </head>
   <body>
@@ -23,7 +25,7 @@
     <section id="view-landing" class="view view-landing is-active">
       <header class="topbar">
         <a class="brand" href="/" aria-label="PulseCheck home">
-          <span class="brand-mark" aria-hidden="true"></span>
+          <img class="brand-logo" src="/static/img/logo.svg" width="28" height="28" alt="" />
           PulseCheck
         </a>
         <div class="topbar-right">
@@ -93,7 +95,7 @@
     <section id="view-auth" class="view view-auth">
       <header class="topbar">
         <a class="brand" href="/" data-goto="landing">
-          <span class="brand-mark" aria-hidden="true"></span>
+          <img class="brand-logo" src="/static/img/logo.svg" width="28" height="28" alt="" />
           PulseCheck
         </a>
         <div class="topbar-right">
@@ -167,7 +169,7 @@
     <section id="view-dashboard" class="view view-dashboard">
       <header class="topbar topbar-dash">
         <a class="brand" href="/" data-goto="dashboard">
-          <span class="brand-mark" aria-hidden="true"></span>
+          <img class="brand-logo" src="/static/img/logo.svg" width="28" height="28" alt="" />
           PulseCheck
         </a>
         <div class="topbar-right">
@@ -219,6 +221,9 @@
           </div>
           <p class="settings-copy" data-i18n="settings.copy">
             Monitor dicek otomatis sesuai interval. Isi Discord webhook supaya dapat notifikasi saat DOWN / recover.
+          </p>
+          <p class="probe-note" id="probe-note">
+            Checks run from the monitoring server, not your PC.
           </p>
           <form id="webhook-form" class="webhook-form">
             <label class="field">
@@ -291,6 +296,7 @@
           </div>
         </div>
         <p class="tz-hint" data-i18n="detail.checksHint">Termasuk auto-check tiap interval.</p>
+        <p class="tz-hint" id="detail-probe-note"></p>
 
         <div class="drawer-actions">
           <button type="button" class="btn btn-primary" id="btn-run-check" data-i18n="detail.runCheck">

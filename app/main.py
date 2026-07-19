@@ -12,7 +12,7 @@ from app import __version__
 from app.core.config import get_settings
 from app.core.database import init_db
 from app.routers import auth_router, monitors_router
-from app.schemas import HealthResponse
+from app.schemas import HealthResponse, MetaResponse
 from app.services.scheduler import scheduler_loop
 from app.web import router as web_router
 
@@ -62,6 +62,19 @@ def create_app() -> FastAPI:
     @application.get("/health", response_model=HealthResponse, tags=["health"])
     async def health() -> HealthResponse:
         return HealthResponse(status="ok", app=settings.app_name, version=__version__)
+
+    @application.get("/api/v1/meta", response_model=MetaResponse, tags=["meta"])
+    async def meta() -> MetaResponse:
+        region = settings.probe_region
+        return MetaResponse(
+            app=settings.app_name,
+            version=__version__,
+            probe_region=region,
+            probe_note=(
+                f"Checks run from server region '{region}', not from your PC. "
+                "Browser results can differ because of network, VPN, or WAF rules."
+            ),
+        )
 
     return application
 

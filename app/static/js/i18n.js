@@ -40,6 +40,8 @@ const I18N = {
     "settings.autoOn": "Auto aktif",
     "settings.copy":
       "Monitor dicek otomatis sesuai interval. Isi Discord webhook supaya dapat notifikasi saat DOWN / recover.",
+    "settings.probeNote":
+      "Dicek dari server monitoring ({region}), bukan dari PC Anda. Hasil browser bisa beda karena jaringan/WAF.",
     "settings.webhook": "Discord webhook URL",
     "settings.saveWebhook": "Simpan webhook",
     "settings.webhookHint":
@@ -113,6 +115,8 @@ const I18N = {
     "settings.autoOn": "Auto on",
     "settings.copy":
       "Monitors are checked automatically by interval. Add a Discord webhook to get DOWN / recovery alerts.",
+    "settings.probeNote":
+      "Checked from the monitoring server ({region}), not your PC. Browser results can differ due to network/WAF.",
     "settings.webhook": "Discord webhook URL",
     "settings.saveWebhook": "Save webhook",
     "settings.webhookHint":
