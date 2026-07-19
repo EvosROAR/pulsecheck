@@ -162,6 +162,8 @@ async def test_monitor_lifecycle(client: AsyncClient) -> None:
     page = await client.get(f"/status/{slug}")
     assert page.status_code == 200
     assert "Example" in page.text
+    assert "local-time" in page.text
+    assert "data-utc" in page.text
 
     exported = await client.get(f"/api/v1/monitors/{monitor_id}/export.csv", headers=headers)
     assert exported.status_code == 200

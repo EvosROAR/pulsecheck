@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models import CheckResult, Monitor, User
-from app.schemas import MonitorStats, ProbeInsightsRead, PublicMonitorStatus
+from app.schemas import MonitorStats, ProbeInsightsRead, PublicMonitorStatus, CheckResultRead
 from app.services.alerts import maybe_alert_owner
 from app.services.checker import probe_url
 from app.services.probe_insights import build_probe_insights
@@ -190,7 +190,7 @@ async def get_public_status(db: AsyncSession, slug: str) -> PublicMonitorStatus 
         last_status_label=stats.last_status_label,
         last_status_tone=stats.last_status_tone,
         last_checked_at=stats.last_checked_at,
-        recent_checks=list(checks.scalars().all()),
+        recent_checks=[CheckResultRead.model_validate(row) for row in checks.scalars().all()],
     )
 
 
