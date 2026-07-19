@@ -10,6 +10,7 @@ from app.core.database import Base, get_db
 from app.main import create_app
 from app.services.alerts import _alert_kind
 from app.services.checker import ProbeResult
+from app.status_labels import StatusInfo, categorize_http_status
 
 
 @pytest_asyncio.fixture
@@ -33,6 +34,7 @@ async def client(monkeypatch: pytest.MonkeyPatch) -> AsyncGenerator[AsyncClient,
             status_code=expected_status,
             response_time_ms=42.5,
             error_message=None,
+            status_info=StatusInfo("up", "UP", "up"),
         )
 
     monkeypatch.setattr("app.services.monitors.probe_url", fake_probe)
@@ -174,3 +176,14 @@ def test_normalize_database_url() -> None:
         normalize_database_url("sqlite+aiosqlite:///./pulsecheck.db")
         == "sqlite+aiosqlite:///./pulsecheck.db"
     )
+
+
+def test_categorize_http_status() -> None:
+    assert categorize_http_status(200).label == "UP"
+    assert categorize_http_status(301).category == "redirect"
+    assert categorize_http_status(403).label == "FORBIDDEN"
+    assert categorize_http_status(404).label == "NOT FOUND"
+    assert categorize_http_status(429).label == "RATE LIMITED"
+    assert categorize_http_status(503).category == "server_error"
+    assert categorize_http_status(None, "Request timed out").category == "timeout"
+    assert categorize_http_status(None, "SSL certificate verify failed").category == "ssl_error"

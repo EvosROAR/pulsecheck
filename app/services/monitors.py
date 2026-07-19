@@ -6,6 +6,7 @@ from app.models import CheckResult, Monitor, User
 from app.schemas import MonitorStats
 from app.services.alerts import maybe_alert_owner
 from app.services.checker import probe_url
+from app.status_labels import categorize_http_status
 
 
 async def run_check(
@@ -66,6 +67,9 @@ async def get_monitor_stats(db: AsyncSession, monitor: Monitor) -> MonitorStats:
         .limit(1)
     )
     last = latest.scalar_one_or_none()
+    last_info = (
+        categorize_http_status(last.status_code, last.error_message) if last is not None else None
+    )
 
     return MonitorStats(
         monitor_id=monitor.id,
@@ -77,6 +81,9 @@ async def get_monitor_stats(db: AsyncSession, monitor: Monitor) -> MonitorStats:
         uptime_percentage=uptime,
         avg_response_time_ms=round(float(avg_rt), 2) if avg_rt is not None else None,
         last_status="up" if last and last.is_up else ("down" if last else None),
+        last_status_category=last_info.category if last_info else None,
+        last_status_label=last_info.label if last_info else None,
+        last_status_tone=last_info.tone if last_info else None,
         last_checked_at=last.checked_at if last else None,
     )
 

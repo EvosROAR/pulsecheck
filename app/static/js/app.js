@@ -196,18 +196,19 @@ function renderDashboard() {
 
   monitors.forEach((m) => {
     const s = state.statsById[m.id];
-    const status = s?.last_status || "unknown";
+    const tone = s?.last_status_tone || (s?.last_status === "up" ? "up" : s?.last_status ? "down" : "unknown");
+    const label = s?.last_status_label || s?.last_status || "UNKNOWN";
     const card = document.createElement("button");
     card.type = "button";
     card.className = "monitor-card";
     card.innerHTML = `
-      <span class="status-orb ${status}"></span>
+      <span class="status-orb ${tone}"></span>
       <div class="monitor-meta">
         <h4>${escapeHtml(m.name)}</h4>
         <p>${escapeHtml(m.url)}</p>
       </div>
       <div class="monitor-side">
-        <span class="badge ${status}">${status}</span>
+        <span class="badge ${tone}">${escapeHtml(label)}</span>
         <small>${
           s ? t("dash.uptime", { n: s.uptime_percentage }) : t("dash.noChecksYet")
         }</small>
@@ -263,7 +264,7 @@ async function openDetail(id) {
   els.detailUptime.textContent = `${stats.uptime_percentage}%`;
   els.detailLatency.textContent =
     stats.avg_response_time_ms != null ? `${Math.round(stats.avg_response_time_ms)} ms` : "—";
-  els.detailStatus.textContent = stats.last_status || "—";
+  els.detailStatus.textContent = stats.last_status_label || stats.last_status || "—";
   els.detailChecks.textContent = String(stats.total_checks);
 
   els.checksList.innerHTML = checks.length
@@ -271,11 +272,14 @@ async function openDetail(id) {
         .map((c) => {
           const when = formatUserTime(c.checked_at);
           const rt = c.response_time_ms != null ? `${Math.round(c.response_time_ms)} ms` : "—";
+          const code = c.status_code ?? "—";
+          const tone = c.status_tone || (c.is_up ? "up" : "down");
+          const label = c.status_label || (c.is_up ? "UP" : "DOWN");
           return `
             <div class="check-row">
               <div>
-                <strong class="${c.is_up ? "tone-up" : "tone-down"}">${c.is_up ? "UP" : "DOWN"}</strong>
-                <small> · ${c.status_code ?? "no status"} · ${rt}</small>
+                <strong class="tone-${tone}">${escapeHtml(label)}</strong>
+                <small> · ${code} · ${rt}</small>
               </div>
               <small>${when}</small>
             </div>
@@ -423,7 +427,11 @@ document.getElementById("btn-run-check").addEventListener("click", async () => {
   if (!state.selectedId) return;
   try {
     const result = await api(`/monitors/${state.selectedId}/check`, { method: "POST" });
-    showToast(result.is_up ? `UP · ${Math.round(result.response_time_ms)} ms` : "DOWN");
+    showToast(
+      result.is_up
+        ? `${result.status_label || "UP"} · ${Math.round(result.response_time_ms)} ms`
+        : result.status_label || "DOWN",
+    );
     await openDetail(state.selectedId);
     await loadMonitors();
   } catch (err) {

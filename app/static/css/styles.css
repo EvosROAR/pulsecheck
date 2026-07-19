@@ -654,6 +654,16 @@ body.mode-register .register-only {
   box-shadow: 0 0 0 6px rgba(214, 69, 69, 0.12);
 }
 
+.status-orb.warn {
+  background: #f59e0b;
+  box-shadow: 0 0 0 6px rgba(245, 158, 11, 0.14);
+}
+
+.status-orb.info {
+  background: #38bdf8;
+  box-shadow: 0 0 0 6px rgba(56, 189, 248, 0.14);
+}
+
 .monitor-meta h4 {
   margin: 0;
   font-size: 1.05rem;
@@ -690,8 +700,30 @@ body.mode-register .register-only {
   color: var(--down);
 }
 
+.badge.warn {
+  background: rgba(245, 158, 11, 0.14);
+  color: #fbbf24;
+}
+
+.badge.info {
+  background: rgba(56, 189, 248, 0.14);
+  color: #7dd3fc;
+}
+
 .badge.unknown {
   background: rgba(232, 242, 239, 0.08);
+  color: var(--ink-soft);
+}
+
+.tone-warn {
+  color: #fbbf24;
+}
+
+.tone-info {
+  color: #7dd3fc;
+}
+
+.tone-unknown {
   color: var(--ink-soft);
 }
 

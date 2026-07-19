@@ -1,6 +1,8 @@
 from datetime import UTC, datetime
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, HttpUrl, field_serializer
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, HttpUrl, field_serializer, model_validator
+
+from app.status_labels import categorize_http_status
 
 
 def _to_utc_iso(value: datetime | None) -> str | None:
@@ -93,6 +95,17 @@ class CheckResultRead(BaseModel):
     response_time_ms: float | None
     error_message: str | None
     checked_at: datetime
+    status_category: str = "unknown"
+    status_label: str = "UNKNOWN"
+    status_tone: str = "unknown"
+
+    @model_validator(mode="after")
+    def attach_status_category(self) -> "CheckResultRead":
+        info = categorize_http_status(self.status_code, self.error_message)
+        self.status_category = info.category
+        self.status_label = info.label
+        self.status_tone = info.tone
+        return self
 
     @field_serializer("checked_at")
     def serialize_checked_at(self, value: datetime) -> str:
@@ -109,6 +122,9 @@ class MonitorStats(BaseModel):
     uptime_percentage: float
     avg_response_time_ms: float | None
     last_status: str | None
+    last_status_category: str | None = None
+    last_status_label: str | None = None
+    last_status_tone: str | None = None
     last_checked_at: datetime | None
 
     @field_serializer("last_checked_at")
