@@ -5,7 +5,7 @@ import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from app.core.config import get_settings
+from app.core.config import get_settings, normalize_database_url
 from app.core.database import Base, get_db
 from app.main import create_app
 from app.services.alerts import _alert_kind
@@ -156,3 +156,12 @@ def test_alert_kind_transitions() -> None:
     assert _alert_kind(False, True) == "recovered"
     assert _alert_kind(True, True) is None
     assert _alert_kind(False, False) is None
+
+
+def test_normalize_database_url() -> None:
+    assert normalize_database_url("postgres://u:p@h/db") == "postgresql+asyncpg://u:p@h/db"
+    assert normalize_database_url("postgresql://u:p@h/db") == "postgresql+asyncpg://u:p@h/db"
+    assert (
+        normalize_database_url("sqlite+aiosqlite:///./pulsecheck.db")
+        == "sqlite+aiosqlite:///./pulsecheck.db"
+    )

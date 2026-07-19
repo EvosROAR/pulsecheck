@@ -184,7 +184,7 @@ API available at http://127.0.0.1:8000
 
 - **Python 3.11+**
 - **FastAPI** — async web framework
-- **SQLAlchemy 2.0** — async ORM
+- **SQLAlchemy 2.0** — async ORM (SQLite locally, PostgreSQL in production)
 - **Pydantic Settings** — typed configuration
 - **python-jose / passlib** — JWT + password hashing
 - **httpx** — async HTTP client for probes
@@ -198,7 +198,7 @@ API available at http://127.0.0.1:8000
 - [x] Background scheduler for automatic interval checks
 - [x] Discord webhook alerts on downtime / recovery
 - [ ] Webhook / email alerts on downtime
-- [ ] PostgreSQL support for production
+- [x] PostgreSQL support for production
 - [ ] Multi-region probe agents
 - [ ] Charts for latency history
 
