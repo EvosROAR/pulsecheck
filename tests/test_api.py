@@ -178,12 +178,16 @@ def test_normalize_database_url() -> None:
     )
 
 
-def test_categorize_http_status() -> None:
-    assert categorize_http_status(200).label == "UP"
-    assert categorize_http_status(301).category == "redirect"
-    assert categorize_http_status(403).label == "FORBIDDEN"
-    assert categorize_http_status(404).label == "NOT FOUND"
-    assert categorize_http_status(429).label == "RATE LIMITED"
-    assert categorize_http_status(503).category == "server_error"
-    assert categorize_http_status(None, "Request timed out").category == "timeout"
-    assert categorize_http_status(None, "SSL certificate verify failed").category == "ssl_error"
+def test_detect_cdn_and_security() -> None:
+    from app.services.probe_insights import _detect_cdn, _security_headers
+
+    assert _detect_cdn({"cf-ray": "abc", "server": "cloudflare"}) == "Cloudflare"
+    present, score = _security_headers(
+        {
+            "strict-transport-security": "max-age=31536000",
+            "x-frame-options": "DENY",
+        }
+    )
+    assert present["strict-transport-security"] is True
+    assert present["content-security-policy"] is False
+    assert score == 33

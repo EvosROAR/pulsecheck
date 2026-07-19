@@ -53,6 +53,7 @@ class CheckResult(Base):
     status_code: Mapped[int | None] = mapped_column(Integer, nullable=True)
     response_time_ms: Mapped[float | None] = mapped_column(Float, nullable=True)
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    details_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     checked_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
 
     monitor: Mapped["Monitor"] = relationship(back_populates="checks")

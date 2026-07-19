@@ -1,11 +1,14 @@
+import json
+
 from sqlalchemy import case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models import CheckResult, Monitor, User
-from app.schemas import MonitorStats
+from app.schemas import MonitorStats, ProbeInsightsRead
 from app.services.alerts import maybe_alert_owner
 from app.services.checker import probe_url
+from app.services.probe_insights import build_probe_insights
 from app.status_labels import categorize_http_status
 
 
@@ -25,12 +28,24 @@ async def run_check(
     previous_up = previous_result.is_up if previous_result else None
 
     probe = await probe_url(monitor.url, monitor.expected_status)
+    insights = await build_probe_insights(
+        url=monitor.url,
+        expected_status=monitor.expected_status,
+        is_up=probe.is_up,
+        status_code=probe.status_code,
+        response_time_ms=probe.response_time_ms,
+        error_message=probe.error_message,
+        headers=probe.headers,
+        response_size_bytes=probe.response_size_bytes,
+        status_info=probe.status_info,
+    )
     result = CheckResult(
         monitor_id=monitor.id,
         is_up=probe.is_up,
         status_code=probe.status_code,
         response_time_ms=probe.response_time_ms,
         error_message=probe.error_message,
+        details_json=insights.to_json(),
     )
     db.add(result)
     await db.commit()
@@ -70,6 +85,12 @@ async def get_monitor_stats(db: AsyncSession, monitor: Monitor) -> MonitorStats:
     last_info = (
         categorize_http_status(last.status_code, last.error_message) if last is not None else None
     )
+    last_insights = None
+    if last is not None and last.details_json:
+        try:
+            last_insights = ProbeInsightsRead.model_validate(json.loads(last.details_json))
+        except (TypeError, ValueError, json.JSONDecodeError):
+            last_insights = None
 
     return MonitorStats(
         monitor_id=monitor.id,
@@ -84,6 +105,7 @@ async def get_monitor_stats(db: AsyncSession, monitor: Monitor) -> MonitorStats:
         last_status_category=last_info.category if last_info else None,
         last_status_label=last_info.label if last_info else None,
         last_status_tone=last_info.tone if last_info else None,
+        last_insights=last_insights,
         last_checked_at=last.checked_at if last else None,
     )
 

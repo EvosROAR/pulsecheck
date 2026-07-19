@@ -1,4 +1,6 @@
 from datetime import UTC, datetime
+import json
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, HttpUrl, field_serializer, model_validator
 
@@ -85,6 +87,30 @@ class MonitorRead(BaseModel):
         return _to_utc_iso(value)  # type: ignore[return-value]
 
 
+class ProbeInsightsRead(BaseModel):
+    status_category: str | None = None
+    status_label: str | None = None
+    status_tone: str | None = None
+    response_time_ms: float | None = None
+    response_size_bytes: int | None = None
+    probe_region: str | None = None
+    ip_addresses: list[str] = []
+    dns_ok: bool | None = None
+    dns_error: str | None = None
+    ssl_checked: bool | None = None
+    ssl_valid: bool | None = None
+    ssl_issuer: str | None = None
+    ssl_expires_at: str | None = None
+    ssl_days_remaining: int | None = None
+    ssl_error: str | None = None
+    server: str | None = None
+    cdn: str | None = None
+    tech_stack: list[str] = []
+    security_headers: dict[str, bool] = {}
+    security_score: int | None = None
+    error_analysis: str | None = None
+
+
 class CheckResultRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -94,10 +120,12 @@ class CheckResultRead(BaseModel):
     status_code: int | None
     response_time_ms: float | None
     error_message: str | None
+    details_json: str | None = None
     checked_at: datetime
     status_category: str = "unknown"
     status_label: str = "UNKNOWN"
     status_tone: str = "unknown"
+    details: ProbeInsightsRead | None = None
 
     @model_validator(mode="after")
     def attach_status_category(self) -> "CheckResultRead":
@@ -105,6 +133,12 @@ class CheckResultRead(BaseModel):
         self.status_category = info.category
         self.status_label = info.label
         self.status_tone = info.tone
+        if self.details_json and self.details is None:
+            try:
+                payload: dict[str, Any] = json.loads(self.details_json)
+                self.details = ProbeInsightsRead.model_validate(payload)
+            except (TypeError, ValueError, json.JSONDecodeError):
+                self.details = None
         return self
 
     @field_serializer("checked_at")
@@ -125,6 +159,7 @@ class MonitorStats(BaseModel):
     last_status_category: str | None = None
     last_status_label: str | None = None
     last_status_tone: str | None = None
+    last_insights: ProbeInsightsRead | None = None
     last_checked_at: datetime | None
 
     @field_serializer("last_checked_at")

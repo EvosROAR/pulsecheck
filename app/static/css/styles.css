@@ -938,6 +938,46 @@ body.mode-register .register-only {
   font-size: 1.15rem;
 }
 
+.insights {
+  margin: 0 0 1.1rem;
+}
+
+.insights h4 {
+  margin: 0 0 0.65rem;
+  font-family: var(--font-display);
+}
+
+.insights-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.55rem;
+}
+
+.insight-card {
+  padding: 0.7rem 0.75rem;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: rgba(8, 14, 20, 0.72);
+}
+
+.insight-card span {
+  display: block;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-soft);
+  margin-bottom: 0.25rem;
+}
+
+.insight-card strong {
+  font-size: 0.92rem;
+  word-break: break-word;
+}
+
+.insight-card.wide {
+  grid-column: 1 / -1;
+}
+
 .drawer-actions,
 .modal-actions {
   display: flex;

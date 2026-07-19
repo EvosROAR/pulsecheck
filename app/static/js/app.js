@@ -246,6 +246,63 @@ function formatUserTime(value) {
   });
 }
 
+function formatBytes(bytes) {
+  if (bytes == null) return "—";
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+function renderInsights(details) {
+  const grid = document.getElementById("insights-grid");
+  const empty = document.getElementById("insights-error");
+  if (!grid || !empty) return;
+
+  if (!details) {
+    grid.innerHTML = "";
+    empty.hidden = false;
+    empty.textContent = t("detail.insightsEmpty");
+    return;
+  }
+
+  empty.hidden = true;
+  const securityPresent = Object.entries(details.security_headers || {})
+    .filter(([, ok]) => ok)
+    .map(([name]) => name);
+  const cards = [
+    ["Status", details.status_label || "—"],
+    ["Response Time", details.response_time_ms != null ? `${Math.round(details.response_time_ms)} ms` : "—"],
+    ["Response Size", formatBytes(details.response_size_bytes)],
+    ["Region", details.probe_region || "—"],
+    ["DNS", details.dns_ok ? "OK" : details.dns_error || "Failed"],
+    ["IP", (details.ip_addresses || []).join(", ") || "—"],
+    [
+      "SSL",
+      details.ssl_checked
+        ? details.ssl_valid
+          ? `Valid · ${details.ssl_days_remaining ?? "?"}d left`
+          : details.ssl_error || "Invalid"
+        : "N/A",
+    ],
+    ["SSL Issuer", details.ssl_issuer || "—"],
+    ["Server", details.server || "—"],
+    ["CDN", details.cdn || "—"],
+    ["Tech Stack", (details.tech_stack || []).join(", ") || "—"],
+    ["Security Score", details.security_score != null ? `${details.security_score}/100` : "—"],
+    ["Security Headers", securityPresent.length ? securityPresent.join(", ") : "None detected"],
+    ["Error Analysis", details.error_analysis || "—"],
+  ];
+
+  grid.innerHTML = cards
+    .map(([label, value], index) => {
+      const wide = index >= cards.length - 2 ? " wide" : "";
+      return `<div class="insight-card${wide}"><span>${escapeHtml(label)}</span><strong>${escapeHtml(
+        String(value),
+      )}</strong></div>`;
+    })
+    .join("");
+}
+
 async function openDetail(id) {
   state.selectedId = id;
   const monitor = state.monitors.find((m) => m.id === id);
@@ -266,6 +323,7 @@ async function openDetail(id) {
     stats.avg_response_time_ms != null ? `${Math.round(stats.avg_response_time_ms)} ms` : "—";
   els.detailStatus.textContent = stats.last_status_label || stats.last_status || "—";
   els.detailChecks.textContent = String(stats.total_checks);
+  renderInsights(stats.last_insights || checks.find((c) => c.details)?.details || null);
 
   els.checksList.innerHTML = checks.length
     ? checks

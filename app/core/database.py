@@ -26,16 +26,16 @@ def _migrate_schema(connection) -> None:
     """Apply lightweight additive migrations for existing databases."""
     inspector = inspect(connection)
     tables = inspector.get_table_names()
-    if "users" not in tables:
-        return
 
-    columns = {column["name"] for column in inspector.get_columns("users")}
-    if "discord_webhook_url" not in columns:
-        dialect = connection.dialect.name
-        if dialect == "sqlite":
+    if "users" in tables:
+        columns = {column["name"] for column in inspector.get_columns("users")}
+        if "discord_webhook_url" not in columns:
             connection.execute(text("ALTER TABLE users ADD COLUMN discord_webhook_url VARCHAR(500)"))
-        else:
-            connection.execute(text("ALTER TABLE users ADD COLUMN discord_webhook_url VARCHAR(500)"))
+
+    if "check_results" in tables:
+        columns = {column["name"] for column in inspector.get_columns("check_results")}
+        if "details_json" not in columns:
+            connection.execute(text("ALTER TABLE check_results ADD COLUMN details_json TEXT"))
 
 
 async def init_db() -> None:
