@@ -36,10 +36,14 @@ const els = {
   detailTitle: document.getElementById("detail-title"),
   detailUrl: document.getElementById("detail-url"),
   detailUptime: document.getElementById("detail-uptime"),
+  detailUptime24h: document.getElementById("detail-uptime-24h"),
   detailLatency: document.getElementById("detail-latency"),
+  detailP95: document.getElementById("detail-p95"),
   detailStatus: document.getElementById("detail-status"),
   detailChecks: document.getElementById("detail-checks"),
   checksList: document.getElementById("checks-list"),
+  sparkline: document.getElementById("latency-sparkline"),
+  publicLink: document.getElementById("public-link"),
   toast: document.getElementById("toast"),
   statTotal: document.getElementById("stat-total"),
   statUp: document.getElementById("stat-up"),
@@ -200,12 +204,13 @@ function renderDashboard() {
     const label = s?.last_status_label || s?.last_status || "UNKNOWN";
     const card = document.createElement("button");
     card.type = "button";
-    card.className = "monitor-card";
+    card.className = `monitor-card${m.is_active ? "" : " is-paused"}`;
     card.innerHTML = `
       <span class="status-orb ${tone}"></span>
       <div class="monitor-meta">
         <h4>${escapeHtml(m.name)}</h4>
         <p>${escapeHtml(m.url)}</p>
+        ${m.is_active ? "" : `<span class="paused-tag">${t("dash.paused")}</span>`}
       </div>
       <div class="monitor-side">
         <span class="badge ${tone}">${escapeHtml(label)}</span>
@@ -269,38 +274,114 @@ function renderInsights(details) {
   const securityPresent = Object.entries(details.security_headers || {})
     .filter(([, ok]) => ok)
     .map(([name]) => name);
+  const sslText = details.ssl_checked
+    ? details.ssl_valid
+      ? `${details.ssl_warning ? "Expiring soon · " : "Valid · "}${details.ssl_days_remaining ?? "?"}d left`
+      : details.ssl_error || "Invalid"
+    : "N/A";
+  const keywordText =
+    details.keyword_matched == null ? "—" : details.keyword_matched ? "Matched" : "Missing";
   const cards = [
-    ["Status", details.status_label || "—"],
-    ["Response Time", details.response_time_ms != null ? `${Math.round(details.response_time_ms)} ms` : "—"],
-    ["Response Size", formatBytes(details.response_size_bytes)],
-    ["Region", details.probe_region || "—"],
-    ["DNS", details.dns_ok ? "OK" : details.dns_error || "Failed"],
-    ["IP", (details.ip_addresses || []).join(", ") || "—"],
-    [
-      "SSL",
-      details.ssl_checked
-        ? details.ssl_valid
-          ? `Valid · ${details.ssl_days_remaining ?? "?"}d left`
-          : details.ssl_error || "Invalid"
-        : "N/A",
-    ],
-    ["SSL Issuer", details.ssl_issuer || "—"],
-    ["Server", details.server || "—"],
-    ["CDN", details.cdn || "—"],
-    ["Tech Stack", (details.tech_stack || []).join(", ") || "—"],
-    ["Security Score", details.security_score != null ? `${details.security_score}/100` : "—"],
-    ["Security Headers", securityPresent.length ? securityPresent.join(", ") : "None detected"],
-    ["Error Analysis", details.error_analysis || "—"],
+    { label: "Status", value: details.status_label || "—", warn: false },
+    {
+      label: "Response Time",
+      value: details.response_time_ms != null ? `${Math.round(details.response_time_ms)} ms` : "—",
+      warn: false,
+    },
+    { label: "Response Size", value: formatBytes(details.response_size_bytes), warn: false },
+    { label: "Region", value: details.probe_region || "—", warn: false },
+    { label: "DNS", value: details.dns_ok ? "OK" : details.dns_error || "Failed", warn: !details.dns_ok },
+    { label: "IP", value: (details.ip_addresses || []).join(", ") || "—", warn: false },
+    { label: "SSL", value: sslText, warn: Boolean(details.ssl_warning || details.ssl_valid === false) },
+    { label: "SSL Issuer", value: details.ssl_issuer || "—", warn: false },
+    { label: "Final URL", value: details.final_url || "—", warn: false },
+    {
+      label: "Redirected",
+      value: details.redirected == null ? "—" : details.redirected ? "Yes" : "No",
+      warn: false,
+    },
+    { label: "Keyword", value: keywordText, warn: details.keyword_matched === false },
+    { label: "Server", value: details.server || "—", warn: false },
+    { label: "CDN", value: details.cdn || "—", warn: false },
+    { label: "Tech Stack", value: (details.tech_stack || []).join(", ") || "—", warn: false },
+    {
+      label: "Security Score",
+      value: details.security_score != null ? `${details.security_score}/100` : "—",
+      warn: details.security_score != null && details.security_score < 50,
+    },
+    {
+      label: "Security Headers",
+      value: securityPresent.length ? securityPresent.join(", ") : "None detected",
+      warn: false,
+      wide: true,
+    },
+    { label: "Error Analysis", value: details.error_analysis || "—", warn: false, wide: true },
   ];
 
   grid.innerHTML = cards
-    .map(([label, value], index) => {
-      const wide = index >= cards.length - 2 ? " wide" : "";
-      return `<div class="insight-card${wide}"><span>${escapeHtml(label)}</span><strong>${escapeHtml(
-        String(value),
+    .map((card) => {
+      const wide = card.wide ? " wide" : "";
+      const warn = card.warn ? " warn" : "";
+      return `<div class="insight-card${wide}${warn}"><span>${escapeHtml(card.label)}</span><strong>${escapeHtml(
+        String(card.value),
       )}</strong></div>`;
     })
     .join("");
+}
+
+function renderSparkline(checks) {
+  const svg = els.sparkline;
+  if (!svg) return;
+  const points = [...checks]
+    .reverse()
+    .map((c) => c.response_time_ms)
+    .filter((v) => typeof v === "number");
+  if (points.length < 2) {
+    svg.innerHTML = "";
+    return;
+  }
+  const width = 320;
+  const height = 72;
+  const pad = 8;
+  const min = Math.min(...points);
+  const max = Math.max(...points);
+  const span = Math.max(max - min, 1);
+  const coords = points.map((value, index) => {
+    const x = pad + (index / (points.length - 1)) * (width - pad * 2);
+    const y = height - pad - ((value - min) / span) * (height - pad * 2);
+    return [x, y];
+  });
+  const line = coords.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
+  const area = `${line} L${coords[coords.length - 1][0].toFixed(1)},${height - pad} L${coords[0][0].toFixed(
+    1,
+  )},${height - pad} Z`;
+  svg.innerHTML = `
+    <path d="${area}" fill="rgba(45, 212, 191, 0.16)"></path>
+    <path d="${line}" fill="none" stroke="#2dd4bf" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path>
+  `;
+}
+
+function syncDetailActions(monitor) {
+  const pauseBtn = document.getElementById("btn-toggle-pause");
+  const publicBtn = document.getElementById("btn-toggle-public");
+  if (pauseBtn) {
+    pauseBtn.textContent = t(monitor.is_active ? "detail.pause" : "detail.resume");
+  }
+  if (publicBtn) {
+    publicBtn.textContent = t(monitor.public_slug ? "detail.disablePublic" : "detail.makePublic");
+  }
+  if (els.publicLink) {
+    if (monitor.public_slug) {
+      const url = `${window.location.origin}/status/${monitor.public_slug}`;
+      els.publicLink.hidden = false;
+      els.publicLink.innerHTML = `${escapeHtml(t("detail.publicLink"))}: <a href="${url}" target="_blank" rel="noopener">${escapeHtml(
+        url,
+      )}</a>`;
+    } else {
+      els.publicLink.hidden = true;
+      els.publicLink.textContent = "";
+    }
+  }
 }
 
 async function openDetail(id) {
@@ -311,19 +392,25 @@ async function openDetail(id) {
   els.detailTitle.textContent = monitor.name;
   els.detailUrl.textContent = monitor.url;
   els.detailUrl.href = monitor.url;
+  syncDetailActions(monitor);
 
   const [stats, checks] = await Promise.all([
     api(`/monitors/${id}/stats`),
-    api(`/monitors/${id}/checks?limit=12`),
+    api(`/monitors/${id}/checks?limit=24`),
   ]);
   state.statsById[id] = stats;
 
   els.detailUptime.textContent = `${stats.uptime_percentage}%`;
+  els.detailUptime24h.textContent =
+    stats.uptime_24h != null ? `${stats.uptime_24h}%` : "—";
   els.detailLatency.textContent =
     stats.avg_response_time_ms != null ? `${Math.round(stats.avg_response_time_ms)} ms` : "—";
+  els.detailP95.textContent =
+    stats.p95_response_time_ms != null ? `${Math.round(stats.p95_response_time_ms)} ms` : "—";
   els.detailStatus.textContent = stats.last_status_label || stats.last_status || "—";
   els.detailChecks.textContent = String(stats.total_checks);
   renderInsights(stats.last_insights || checks.find((c) => c.details)?.details || null);
+  renderSparkline(checks);
 
   els.checksList.innerHTML = checks.length
     ? checks
@@ -453,6 +540,17 @@ document.getElementById("btn-refresh").addEventListener("click", async () => {
   showToast(t("toast.refreshed"));
 });
 
+document.getElementById("btn-check-all").addEventListener("click", async () => {
+  try {
+    const result = await api("/monitors/check-all", { method: "POST" });
+    await loadMonitors();
+    if (state.selectedId) await openDetail(state.selectedId);
+    showToast(t("toast.checkedAll", { n: result.checked }));
+  } catch (err) {
+    showToast(err.message);
+  }
+});
+
 document.querySelectorAll("[data-close-modal]").forEach((node) => {
   node.addEventListener("click", closeCreateModal);
 });
@@ -468,6 +566,7 @@ els.createForm.addEventListener("submit", async (event) => {
     url: document.getElementById("monitor-url").value.trim(),
     interval_seconds: Number(document.getElementById("monitor-interval").value || 60),
     expected_status: Number(document.getElementById("monitor-status").value || 200),
+    expected_body_contains: document.getElementById("monitor-keyword").value.trim() || null,
   };
 
   try {
@@ -505,6 +604,65 @@ document.getElementById("btn-delete-monitor").addEventListener("click", async ()
     closeDrawer();
     await loadMonitors();
     showToast(t("toast.monitorDeleted"));
+  } catch (err) {
+    showToast(err.message);
+  }
+});
+
+document.getElementById("btn-toggle-pause").addEventListener("click", async () => {
+  if (!state.selectedId) return;
+  const monitor = state.monitors.find((m) => m.id === state.selectedId);
+  if (!monitor) return;
+  try {
+    const updated = await api(`/monitors/${state.selectedId}`, {
+      method: "PATCH",
+      json: { is_active: !monitor.is_active },
+    });
+    const idx = state.monitors.findIndex((m) => m.id === updated.id);
+    if (idx >= 0) state.monitors[idx] = updated;
+    syncDetailActions(updated);
+    await loadMonitors();
+    showToast(t(updated.is_active ? "toast.resumed" : "toast.paused"));
+  } catch (err) {
+    showToast(err.message);
+  }
+});
+
+document.getElementById("btn-toggle-public").addEventListener("click", async () => {
+  if (!state.selectedId) return;
+  const monitor = state.monitors.find((m) => m.id === state.selectedId);
+  if (!monitor) return;
+  try {
+    const updated = await api(`/monitors/${state.selectedId}`, {
+      method: "PATCH",
+      json: { public_enabled: !monitor.public_slug },
+    });
+    const idx = state.monitors.findIndex((m) => m.id === updated.id);
+    if (idx >= 0) state.monitors[idx] = updated;
+    syncDetailActions(updated);
+    showToast(t(updated.public_slug ? "toast.publicOn" : "toast.publicOff"));
+  } catch (err) {
+    showToast(err.message);
+  }
+});
+
+document.getElementById("btn-export-csv").addEventListener("click", async () => {
+  if (!state.selectedId) return;
+  try {
+    const response = await fetch(`${API}/monitors/${state.selectedId}/export.csv`, {
+      headers: state.token ? { Authorization: `Bearer ${state.token}` } : {},
+    });
+    if (!response.ok) throw new Error(t("common.error"));
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `pulsecheck-${state.selectedId}-checks.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    showToast(t("toast.exported"));
   } catch (err) {
     showToast(err.message);
   }

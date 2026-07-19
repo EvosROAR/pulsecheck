@@ -40,12 +40,16 @@ class ProbeInsights:
     ssl_issuer: str | None = None
     ssl_expires_at: str | None = None
     ssl_days_remaining: int | None = None
+    ssl_warning: bool = False
     ssl_error: str | None = None
     server: str | None = None
     cdn: str | None = None
     tech_stack: list[str] = field(default_factory=list)
     security_headers: dict[str, bool] = field(default_factory=dict)
     security_score: int = 0
+    final_url: str | None = None
+    redirected: bool | None = None
+    keyword_matched: bool | None = None
     error_analysis: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
@@ -190,6 +194,8 @@ async def build_probe_insights(
     headers: dict[str, str] | None = None,
     response_size_bytes: int | None = None,
     status_info: StatusInfo | None = None,
+    final_url: str | None = None,
+    keyword_matched: bool | None = None,
 ) -> ProbeInsights:
     settings = get_settings()
     info = status_info or categorize_http_status(status_code, error_message)
@@ -218,6 +224,16 @@ async def build_probe_insights(
 
     security_headers, security_score = _security_headers(headers)
     lowered = {k.lower(): v for k, v in headers.items()}
+    days_remaining = ssl_data.get("ssl_days_remaining")
+    ssl_warning = bool(
+        ssl_data.get("ssl_valid") is True
+        and isinstance(days_remaining, int)
+        and days_remaining <= 14
+    )
+    resolved_final = final_url or url
+    redirected = None
+    if final_url:
+        redirected = final_url.rstrip("/") != url.rstrip("/")
 
     return ProbeInsights(
         status_category=info.category,
@@ -233,13 +249,17 @@ async def build_probe_insights(
         ssl_valid=ssl_data.get("ssl_valid"),
         ssl_issuer=ssl_data.get("ssl_issuer"),
         ssl_expires_at=ssl_data.get("ssl_expires_at"),
-        ssl_days_remaining=ssl_data.get("ssl_days_remaining"),
+        ssl_days_remaining=days_remaining,
+        ssl_warning=ssl_warning,
         ssl_error=ssl_data.get("ssl_error"),
         server=lowered.get("server"),
         cdn=_detect_cdn(headers),
         tech_stack=_detect_tech_stack(headers),
         security_headers=security_headers,
         security_score=security_score,
+        final_url=resolved_final,
+        redirected=redirected,
+        keyword_matched=keyword_matched,
         error_analysis=_error_analysis(
             is_up=is_up,
             status_info=info,

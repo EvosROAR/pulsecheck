@@ -28,14 +28,20 @@ PulseCheck showcases production-minded Python backend skills:
 
 | Feature | Description |
 |---|---|
-| Dashboard UI | Landing page, auth, monitor dashboard, detail drawer |
+| Dashboard UI | Landing page, auth, monitor dashboard, detail drawer (ID/EN) |
 | Auto-check | Background scheduler probes monitors by interval |
 | Discord alerts | Webhook notify on DOWN / RECOVERED |
+| Probe insights | DNS, SSL expiry, IP, CDN, tech stack, security headers |
+| Keyword check | Optional body keyword that must appear in the response |
+| Period stats | Uptime 24h / 7d, avg + p95 latency, sparkline |
+| Pause / resume | Temporarily stop auto-checks per monitor |
+| Check all | Trigger every active monitor on demand |
+| CSV export | Download check history for a monitor |
+| Public status | Shareable `/status/{slug}` page per monitor |
 | User auth | Register, login (OAuth2 password flow), `/me` |
 | Monitors | Create / list / update / delete URL monitors |
 | Live checks | Trigger an on-demand HTTP probe |
 | History | Paginated check results per monitor |
-| Stats | Uptime %, avg latency, last status |
 | Docs | Interactive Swagger UI at `/docs` |
 
 ---

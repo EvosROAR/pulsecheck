@@ -60,6 +60,7 @@ class MonitorCreate(BaseModel):
     url: HttpUrl
     interval_seconds: int = Field(default=60, ge=30, le=3600)
     expected_status: int = Field(default=200, ge=100, le=599)
+    expected_body_contains: str | None = Field(default=None, max_length=200)
 
 
 class MonitorUpdate(BaseModel):
@@ -67,7 +68,9 @@ class MonitorUpdate(BaseModel):
     url: HttpUrl | None = None
     interval_seconds: int | None = Field(default=None, ge=30, le=3600)
     expected_status: int | None = Field(default=None, ge=100, le=599)
+    expected_body_contains: str | None = Field(default=None, max_length=200)
     is_active: bool | None = None
+    public_enabled: bool | None = None
 
 
 class MonitorRead(BaseModel):
@@ -78,7 +81,9 @@ class MonitorRead(BaseModel):
     url: str
     interval_seconds: int
     expected_status: int
+    expected_body_contains: str | None = None
     is_active: bool
+    public_slug: str | None = None
     created_at: datetime
     owner_id: int
 
@@ -102,12 +107,16 @@ class ProbeInsightsRead(BaseModel):
     ssl_issuer: str | None = None
     ssl_expires_at: str | None = None
     ssl_days_remaining: int | None = None
+    ssl_warning: bool | None = None
     ssl_error: str | None = None
     server: str | None = None
     cdn: str | None = None
     tech_stack: list[str] = []
     security_headers: dict[str, bool] = {}
     security_score: int | None = None
+    final_url: str | None = None
+    redirected: bool | None = None
+    keyword_matched: bool | None = None
     error_analysis: str | None = None
 
 
@@ -154,13 +163,37 @@ class MonitorStats(BaseModel):
     up_checks: int
     down_checks: int
     uptime_percentage: float
+    uptime_24h: float | None = None
+    uptime_7d: float | None = None
     avg_response_time_ms: float | None
+    p95_response_time_ms: float | None = None
     last_status: str | None
     last_status_category: str | None = None
     last_status_label: str | None = None
     last_status_tone: str | None = None
     last_insights: ProbeInsightsRead | None = None
     last_checked_at: datetime | None
+    is_active: bool = True
+    public_slug: str | None = None
+    expected_body_contains: str | None = None
+
+    @field_serializer("last_checked_at")
+    def serialize_last_checked_at(self, value: datetime | None) -> str | None:
+        return _to_utc_iso(value)
+
+
+class PublicMonitorStatus(BaseModel):
+    name: str
+    url: str
+    is_active: bool
+    uptime_percentage: float
+    uptime_24h: float | None = None
+    avg_response_time_ms: float | None
+    last_status: str | None
+    last_status_label: str | None = None
+    last_status_tone: str | None = None
+    last_checked_at: datetime | None
+    recent_checks: list[CheckResultRead] = []
 
     @field_serializer("last_checked_at")
     def serialize_last_checked_at(self, value: datetime | None) -> str | None:
@@ -178,3 +211,8 @@ class MetaResponse(BaseModel):
     version: str
     probe_region: str
     probe_note: str
+
+
+class CheckAllResponse(BaseModel):
+    checked: int
+    results: list[CheckResultRead]

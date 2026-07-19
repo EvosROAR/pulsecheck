@@ -28,13 +28,22 @@ async def client(monkeypatch: pytest.MonkeyPatch) -> AsyncGenerator[AsyncClient,
         async with session_factory() as session:
             yield session
 
-    async def fake_probe(url: str, expected_status: int = 200) -> ProbeResult:
+    async def fake_probe(
+        url: str,
+        expected_status: int = 200,
+        *,
+        expected_body_contains: str | None = None,
+    ) -> ProbeResult:
+        keyword = (expected_body_contains or "").strip() or None
+        keyword_matched = True if keyword else None
         return ProbeResult(
             is_up=True,
             status_code=expected_status,
             response_time_ms=42.5,
             error_message=None,
             status_info=StatusInfo("up", "UP", "up"),
+            final_url=url,
+            keyword_matched=keyword_matched,
         )
 
     monkeypatch.setattr("app.services.monitors.probe_url", fake_probe)
@@ -133,6 +142,30 @@ async def test_monitor_lifecycle(client: AsyncClient) -> None:
     assert body["total_checks"] == 1
     assert body["uptime_percentage"] == 100.0
     assert body["last_status"] == "up"
+    assert "uptime_24h" in body
+    assert "p95_response_time_ms" in body
+
+    paused = await client.patch(
+        f"/api/v1/monitors/{monitor_id}",
+        headers=headers,
+        json={"is_active": False, "public_enabled": True},
+    )
+    assert paused.status_code == 200
+    assert paused.json()["is_active"] is False
+    slug = paused.json()["public_slug"]
+    assert slug
+
+    public = await client.get(f"/api/v1/public/status/{slug}")
+    assert public.status_code == 200
+    assert public.json()["name"] == "Example"
+
+    page = await client.get(f"/status/{slug}")
+    assert page.status_code == 200
+    assert "Example" in page.text
+
+    exported = await client.get(f"/api/v1/monitors/{monitor_id}/export.csv", headers=headers)
+    assert exported.status_code == 200
+    assert "checked_at" in exported.text
 
     deleted = await client.delete(f"/api/v1/monitors/{monitor_id}", headers=headers)
     assert deleted.status_code == 204

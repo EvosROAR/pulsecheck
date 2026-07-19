@@ -11,7 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from app import __version__
 from app.core.config import get_settings
 from app.core.database import init_db
-from app.routers import auth_router, monitors_router
+from app.routers import auth_router, monitors_router, public_monitors_router
 from app.schemas import HealthResponse, MetaResponse
 from app.services.scheduler import scheduler_loop
 from app.web import router as web_router
@@ -58,6 +58,7 @@ def create_app() -> FastAPI:
     application.include_router(web_router)
     application.include_router(auth_router, prefix="/api/v1")
     application.include_router(monitors_router, prefix="/api/v1")
+    application.include_router(public_monitors_router, prefix="/api/v1")
 
     @application.get("/health", response_model=HealthResponse, tags=["health"])
     async def health() -> HealthResponse:

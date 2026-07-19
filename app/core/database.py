@@ -37,6 +37,19 @@ def _migrate_schema(connection) -> None:
         if "details_json" not in columns:
             connection.execute(text("ALTER TABLE check_results ADD COLUMN details_json TEXT"))
 
+    if "monitors" in tables:
+        columns = {column["name"] for column in inspector.get_columns("monitors")}
+        if "expected_body_contains" not in columns:
+            connection.execute(text("ALTER TABLE monitors ADD COLUMN expected_body_contains VARCHAR(200)"))
+        if "public_slug" not in columns:
+            connection.execute(text("ALTER TABLE monitors ADD COLUMN public_slug VARCHAR(32)"))
+            try:
+                connection.execute(
+                    text("CREATE UNIQUE INDEX IF NOT EXISTS ix_monitors_public_slug ON monitors (public_slug)")
+                )
+            except Exception:  # noqa: BLE001 - sqlite/postgres dialect differences
+                pass
+
 
 async def init_db() -> None:
     from app import models  # noqa: F401

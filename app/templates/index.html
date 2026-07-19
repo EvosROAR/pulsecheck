@@ -246,11 +246,15 @@
         <section class="monitors-section">
           <div class="section-head">
             <h3 data-i18n="dash.monitors">Monitor</h3>
-            <button type="button" class="btn btn-secondary btn-sm" id="btn-refresh" data-i18n="dash.refresh">
-              Refresh
-            </button>
-          </div>
-          <div id="monitors-empty" class="empty-state" hidden>
+            <div class="section-actions">
+              <button type="button" class="btn btn-secondary btn-sm" id="btn-check-all" data-i18n="dash.checkAll">
+                Check all
+              </button>
+              <button type="button" class="btn btn-secondary btn-sm" id="btn-refresh" data-i18n="dash.refresh">
+                Refresh
+              </button>
+            </div>
+          </div>          <div id="monitors-empty" class="empty-state" hidden>
             <h4 data-i18n="dash.emptyTitle">Belum ada monitor</h4>
             <p data-i18n="dash.emptyCopy">Tambahkan URL pertama Anda untuk mulai memantau uptime.</p>
             <button type="button" class="btn btn-primary" id="btn-empty-create" data-i18n="dash.addMonitor">
@@ -283,8 +287,16 @@
             <strong id="detail-uptime">—</strong>
           </div>
           <div>
+            <span data-i18n="detail.uptime24h">Uptime 24h</span>
+            <strong id="detail-uptime-24h">—</strong>
+          </div>
+          <div>
             <span data-i18n="detail.avgLatency">Avg latency</span>
             <strong id="detail-latency">—</strong>
+          </div>
+          <div>
+            <span data-i18n="detail.p95">p95 latency</span>
+            <strong id="detail-p95">—</strong>
           </div>
           <div>
             <span data-i18n="detail.lastStatus">Last status</span>
@@ -295,6 +307,10 @@
             <strong id="detail-checks">—</strong>
           </div>
         </div>
+        <section class="latency-chart" aria-label="Latency sparkline">
+          <h4 data-i18n="detail.latencyChart">Latency (recent)</h4>
+          <svg id="latency-sparkline" class="sparkline" viewBox="0 0 320 72" preserveAspectRatio="none"></svg>
+        </section>
         <p class="tz-hint" data-i18n="detail.checksHint">Termasuk auto-check tiap interval.</p>
         <p class="tz-hint" id="detail-probe-note"></p>
 
@@ -308,9 +324,18 @@
           <button type="button" class="btn btn-primary" id="btn-run-check" data-i18n="detail.runCheck">
             Jalankan check
           </button>
+          <button type="button" class="btn btn-secondary" id="btn-toggle-pause" data-i18n="detail.pause">
+            Pause
+          </button>
+          <button type="button" class="btn btn-secondary" id="btn-export-csv" data-i18n="detail.exportCsv">
+            Export CSV
+          </button>
+          <button type="button" class="btn btn-secondary" id="btn-toggle-public" data-i18n="detail.makePublic">
+            Public page
+          </button>
           <button type="button" class="btn btn-danger" id="btn-delete-monitor" data-i18n="detail.delete">Hapus</button>
         </div>
-
+        <p id="public-link" class="tz-hint" hidden></p>
         <div class="history">
           <h4 data-i18n="detail.history">Riwayat check</h4>
           <p class="tz-hint" data-i18n="detail.tzHint">Waktu = zona lokal perangkat Anda.</p>
@@ -362,7 +387,16 @@
             <input id="monitor-status" name="expected_status" type="number" min="100" max="599" value="200" />
           </label>
         </div>
-
+        <label class="field">
+          <span data-i18n="create.keyword">Keyword di body (opsional)</span>
+          <input
+            id="monitor-keyword"
+            name="expected_body_contains"
+            maxlength="200"
+            data-i18n-placeholder="create.keywordPlaceholder"
+            placeholder="teks yang harus ada di response"
+          />
+        </label>
         <p id="create-error" class="form-error" hidden></p>
 
         <div class="modal-actions">

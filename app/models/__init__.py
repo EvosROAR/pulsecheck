@@ -32,7 +32,9 @@ class Monitor(Base):
     url: Mapped[str] = mapped_column(String(2048), nullable=False)
     interval_seconds: Mapped[int] = mapped_column(Integer, default=60)
     expected_status: Mapped[int] = mapped_column(Integer, default=200)
+    expected_body_contains: Mapped[str | None] = mapped_column(String(200), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    public_slug: Mapped[str | None] = mapped_column(String(32), unique=True, index=True, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     owner_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
 
