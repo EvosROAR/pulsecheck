@@ -7,7 +7,7 @@ from app.core.database import get_db
 from app.core.security import create_access_token, hash_password, verify_password
 from app.deps import get_current_user
 from app.models import User
-from app.schemas import Token, UserCreate, UserRead
+from app.schemas import Token, UserCreate, UserRead, UserUpdate
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -48,4 +48,28 @@ async def login(
 
 @router.get("/me", response_model=UserRead)
 async def read_me(current_user: User = Depends(get_current_user)) -> User:
+    return current_user
+
+
+@router.patch("/me", response_model=UserRead)
+async def update_me(
+    payload: UserUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> User:
+    data = payload.model_dump(exclude_unset=True)
+    if "discord_webhook_url" in data:
+        url = data["discord_webhook_url"]
+        if url is not None:
+            url = url.strip() or None
+            if url and not url.startswith("https://discord.com/api/webhooks/"):
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                    detail="Discord webhook URL tidak valid",
+                )
+            data["discord_webhook_url"] = url
+    for key, value in data.items():
+        setattr(current_user, key, value)
+    await db.commit()
+    await db.refresh(current_user)
     return current_user

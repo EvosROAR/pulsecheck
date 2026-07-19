@@ -6,16 +6,13 @@ from app.core.database import get_db
 from app.deps import get_current_user
 from app.models import CheckResult, Monitor, User
 from app.schemas import CheckResultRead, MonitorCreate, MonitorRead, MonitorStats, MonitorUpdate
-from app.services.monitors import get_monitor_stats, run_check
+from app.services.monitors import get_monitor_stats, get_monitor_with_owner, run_check
 
 router = APIRouter(prefix="/monitors", tags=["monitors"])
 
 
 async def _get_owned_monitor(db: AsyncSession, monitor_id: int, user: User) -> Monitor:
-    result = await db.execute(
-        select(Monitor).where(Monitor.id == monitor_id, Monitor.owner_id == user.id)
-    )
-    monitor = result.scalar_one_or_none()
+    monitor = await get_monitor_with_owner(db, monitor_id, user.id)
     if monitor is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Monitor not found")
     return monitor

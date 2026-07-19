@@ -30,7 +30,13 @@ class UserRead(BaseModel):
     email: EmailStr
     full_name: str
     is_active: bool
+    discord_webhook_url: str | None = None
     created_at: datetime
+
+
+class UserUpdate(BaseModel):
+    full_name: str | None = Field(default=None, min_length=2, max_length=120)
+    discord_webhook_url: str | None = Field(default=None, max_length=500)
 
 
 class MonitorCreate(BaseModel):

@@ -29,6 +29,8 @@ PulseCheck showcases production-minded Python backend skills:
 | Feature | Description |
 |---|---|
 | Dashboard UI | Landing page, auth, monitor dashboard, detail drawer |
+| Auto-check | Background scheduler probes monitors by interval |
+| Discord alerts | Webhook notify on DOWN / RECOVERED |
 | User auth | Register, login (OAuth2 password flow), `/me` |
 | Monitors | Create / list / update / delete URL monitors |
 | Live checks | Trigger an on-demand HTTP probe |
@@ -76,6 +78,14 @@ Open:
 - **Dashboard UI** → http://127.0.0.1:8000/
 - API docs → http://127.0.0.1:8000/docs
 - Health check → http://127.0.0.1:8000/health
+
+### Discord alert setup
+
+1. Di Discord: **Channel Settings → Integrations → Webhooks → New Webhook → Copy Webhook URL**
+2. Login ke dashboard PulseCheck
+3. Tempel URL di bagian **Auto-check & Discord alert** → **Simpan webhook**
+
+Saat monitor berubah dari UP → DOWN (atau recover), PulseCheck kirim embed ke channel itu.
 
 ---
 
@@ -185,11 +195,12 @@ API available at http://127.0.0.1:8000
 
 ## Roadmap ideas
 
-- [ ] Background scheduler for automatic interval checks
+- [x] Background scheduler for automatic interval checks
+- [x] Discord webhook alerts on downtime / recovery
 - [ ] Webhook / email alerts on downtime
 - [ ] PostgreSQL support for production
 - [ ] Multi-region probe agents
-- [ ] Simple dashboard UI
+- [ ] Charts for latency history
 
 ---
 

@@ -125,6 +125,10 @@ async function login(email, password) {
 async function loadMe() {
   state.user = await api("/auth/me");
   els.userChip.textContent = state.user.full_name || state.user.email;
+  const webhookInput = document.getElementById("discord-webhook");
+  if (webhookInput) {
+    webhookInput.value = state.user.discord_webhook_url || "";
+  }
 }
 
 async function loadMonitors() {
@@ -392,6 +396,21 @@ document.getElementById("btn-delete-monitor").addEventListener("click", async ()
     closeDrawer();
     await loadMonitors();
     showToast("Monitor dihapus");
+  } catch (err) {
+    showToast(err.message);
+  }
+});
+
+document.getElementById("webhook-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const discord_webhook_url = document.getElementById("discord-webhook").value.trim() || null;
+  try {
+    state.user = await api("/auth/me", {
+      method: "PATCH",
+      json: { discord_webhook_url },
+    });
+    document.getElementById("discord-webhook").value = state.user.discord_webhook_url || "";
+    showToast(discord_webhook_url ? "Webhook Discord disimpan" : "Webhook dihapus");
   } catch (err) {
     showToast(err.message);
   }

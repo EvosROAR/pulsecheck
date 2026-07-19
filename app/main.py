@@ -1,5 +1,7 @@
 from contextlib import asynccontextmanager
 from pathlib import Path
+import asyncio
+import logging
 
 import uvicorn
 from fastapi import FastAPI
@@ -11,15 +13,27 @@ from app.core.config import get_settings
 from app.core.database import init_db
 from app.routers import auth_router, monitors_router
 from app.schemas import HealthResponse
+from app.services.scheduler import scheduler_loop
 from app.web import router as web_router
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
+logging.basicConfig(level=logging.INFO)
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     await init_db()
-    yield
+    settings = get_settings()
+    stop_event = asyncio.Event()
+    scheduler_task: asyncio.Task | None = None
+    if settings.scheduler_enabled:
+        scheduler_task = asyncio.create_task(scheduler_loop(stop_event))
+    try:
+        yield
+    finally:
+        stop_event.set()
+        if scheduler_task is not None:
+            await scheduler_task
 
 
 def create_app() -> FastAPI:

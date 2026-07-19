@@ -5,13 +5,18 @@ import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
+from app.core.config import get_settings
 from app.core.database import Base, get_db
 from app.main import create_app
+from app.services.alerts import _alert_kind
 from app.services.checker import ProbeResult
 
 
 @pytest_asyncio.fixture
 async def client(monkeypatch: pytest.MonkeyPatch) -> AsyncGenerator[AsyncClient, None]:
+    monkeypatch.setenv("SCHEDULER_ENABLED", "false")
+    get_settings.cache_clear()
+
     engine = create_async_engine("sqlite+aiosqlite:///:memory:")
     session_factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
@@ -41,6 +46,7 @@ async def client(monkeypatch: pytest.MonkeyPatch) -> AsyncGenerator[AsyncClient,
 
     application.dependency_overrides.clear()
     await engine.dispose()
+    get_settings.cache_clear()
 
 
 async def _register_and_login(client: AsyncClient) -> str:
@@ -118,3 +124,34 @@ async def test_monitor_lifecycle(client: AsyncClient) -> None:
 
     deleted = await client.delete(f"/api/v1/monitors/{monitor_id}", headers=headers)
     assert deleted.status_code == 204
+
+
+@pytest.mark.asyncio
+async def test_update_discord_webhook(client: AsyncClient) -> None:
+    token = await _register_and_login(client)
+    headers = {"Authorization": f"Bearer {token}"}
+    webhook = "https://discord.com/api/webhooks/123/abc"
+
+    updated = await client.patch(
+        "/api/v1/auth/me",
+        headers=headers,
+        json={"discord_webhook_url": webhook},
+    )
+    assert updated.status_code == 200
+    assert updated.json()["discord_webhook_url"] == webhook
+
+    invalid = await client.patch(
+        "/api/v1/auth/me",
+        headers=headers,
+        json={"discord_webhook_url": "https://example.com/not-discord"},
+    )
+    assert invalid.status_code == 422
+
+
+def test_alert_kind_transitions() -> None:
+    assert _alert_kind(None, True) is None
+    assert _alert_kind(None, False) == "down"
+    assert _alert_kind(True, False) == "down"
+    assert _alert_kind(False, True) == "recovered"
+    assert _alert_kind(True, True) is None
+    assert _alert_kind(False, False) is None

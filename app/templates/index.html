@@ -50,8 +50,8 @@
           <svg class="pulse-wave" viewBox="0 0 1200 420" preserveAspectRatio="none">
             <defs>
               <linearGradient id="waveFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="rgba(14, 184, 166, 0.35)" />
-                <stop offset="100%" stop-color="rgba(14, 184, 166, 0)" />
+                <stop offset="0%" stop-color="rgba(45, 212, 191, 0.28)" />
+                <stop offset="100%" stop-color="rgba(45, 212, 191, 0)" />
               </linearGradient>
             </defs>
             <path
@@ -172,6 +172,32 @@
             <span class="stat-label">Avg latency</span>
             <strong id="stat-latency">—</strong>
           </div>
+        </section>
+
+        <section class="settings-panel">
+          <div class="section-head">
+            <h3>Auto-check & Discord alert</h3>
+            <span class="live-badge"><span class="live-dot"></span> Auto aktif</span>
+          </div>
+          <p class="settings-copy">
+            Monitor dicek otomatis sesuai interval. Isi Discord webhook supaya dapat notifikasi saat DOWN / recover.
+          </p>
+          <form id="webhook-form" class="webhook-form">
+            <label class="field">
+              <span>Discord webhook URL</span>
+              <input
+                id="discord-webhook"
+                type="url"
+                placeholder="https://discord.com/api/webhooks/..."
+              />
+            </label>
+            <div class="modal-actions">
+              <button type="submit" class="btn btn-secondary">Simpan webhook</button>
+            </div>
+            <p id="webhook-hint" class="auth-hint">
+              Di Discord: Channel Settings → Integrations → Webhooks → New Webhook → Copy URL
+            </p>
+          </form>
         </section>
 
         <section class="monitors-section">

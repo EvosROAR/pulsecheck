@@ -13,6 +13,8 @@ class Settings(BaseSettings):
     database_url: str = "sqlite+aiosqlite:///./pulsecheck.db"
     check_timeout_seconds: float = 10.0
     default_interval_seconds: int = 60
+    scheduler_enabled: bool = True
+    scheduler_tick_seconds: int = 15
     cors_origins: list[str] = ["*"]
 
 

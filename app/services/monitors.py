@@ -1,12 +1,28 @@
 from sqlalchemy import case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
-from app.models import CheckResult, Monitor
+from app.models import CheckResult, Monitor, User
 from app.schemas import MonitorStats
+from app.services.alerts import maybe_alert_owner
 from app.services.checker import probe_url
 
 
-async def run_check(db: AsyncSession, monitor: Monitor) -> CheckResult:
+async def run_check(
+    db: AsyncSession,
+    monitor: Monitor,
+    *,
+    notify: bool = True,
+) -> CheckResult:
+    previous = await db.execute(
+        select(CheckResult)
+        .where(CheckResult.monitor_id == monitor.id)
+        .order_by(CheckResult.checked_at.desc())
+        .limit(1)
+    )
+    previous_result = previous.scalar_one_or_none()
+    previous_up = previous_result.is_up if previous_result else None
+
     probe = await probe_url(monitor.url, monitor.expected_status)
     result = CheckResult(
         monitor_id=monitor.id,
@@ -18,6 +34,14 @@ async def run_check(db: AsyncSession, monitor: Monitor) -> CheckResult:
     db.add(result)
     await db.commit()
     await db.refresh(result)
+
+    if notify:
+        owner = getattr(monitor, "owner", None)
+        if owner is None:
+            owner_result = await db.execute(select(User).where(User.id == monitor.owner_id))
+            owner = owner_result.scalar_one_or_none()
+        await maybe_alert_owner(owner, monitor, result, previous_up)
+
     return result
 
 
@@ -55,3 +79,12 @@ async def get_monitor_stats(db: AsyncSession, monitor: Monitor) -> MonitorStats:
         last_status="up" if last and last.is_up else ("down" if last else None),
         last_checked_at=last.checked_at if last else None,
     )
+
+
+async def get_monitor_with_owner(db: AsyncSession, monitor_id: int, owner_id: int) -> Monitor | None:
+    result = await db.execute(
+        select(Monitor)
+        .where(Monitor.id == monitor_id, Monitor.owner_id == owner_id)
+        .options(selectinload(Monitor.owner))
+    )
+    return result.scalar_one_or_none()
