@@ -26,21 +26,39 @@
           <span class="brand-mark" aria-hidden="true"></span>
           PulseCheck
         </a>
-        <button type="button" class="btn btn-ghost" data-goto="auth">Masuk</button>
+        <div class="topbar-right">
+          <div class="lang-switch" role="group" aria-label="Language">
+            <button type="button" class="lang-btn" data-lang="id">ID</button>
+            <button type="button" class="lang-btn" data-lang="en">EN</button>
+          </div>
+          <button type="button" class="btn btn-ghost" data-goto="auth" data-i18n="nav.login">Masuk</button>
+        </div>
       </header>
 
       <div class="hero">
         <div class="hero-copy">
           <p class="brand-lockup">PulseCheck</p>
-          <h1>Rasakan denyut situs Anda.</h1>
-          <p class="lede">
+          <h1 data-i18n="landing.headline">Rasakan denyut situs Anda.</h1>
+          <p class="lede" data-i18n="landing.lede">
             Pantau uptime, latency, dan status HTTP dari satu dashboard yang ringkas.
           </p>
           <div class="cta-row">
-            <button type="button" class="btn btn-primary" data-goto="auth" data-mode="register">
+            <button
+              type="button"
+              class="btn btn-primary"
+              data-goto="auth"
+              data-mode="register"
+              data-i18n="landing.ctaStart"
+            >
               Mulai gratis
             </button>
-            <button type="button" class="btn btn-secondary" data-goto="auth" data-mode="login">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-goto="auth"
+              data-mode="login"
+              data-i18n="landing.ctaLogin"
+            >
               Sudah punya akun
             </button>
           </div>
@@ -65,7 +83,7 @@
           </svg>
           <div class="live-pill">
             <span class="live-dot"></span>
-            Live probe ready
+            <span data-i18n="landing.live">Live probe ready</span>
           </div>
         </div>
       </div>
@@ -78,7 +96,13 @@
           <span class="brand-mark" aria-hidden="true"></span>
           PulseCheck
         </a>
-        <button type="button" class="btn btn-ghost" data-goto="landing">Kembali</button>
+        <div class="topbar-right">
+          <div class="lang-switch" role="group" aria-label="Language">
+            <button type="button" class="lang-btn" data-lang="id">ID</button>
+            <button type="button" class="lang-btn" data-lang="en">EN</button>
+          </div>
+          <button type="button" class="btn btn-ghost" data-goto="landing" data-i18n="nav.back">Kembali</button>
+        </div>
       </header>
 
       <div class="auth-shell">
@@ -89,12 +113,16 @@
 
         <form id="auth-form" class="auth-form" novalidate>
           <div class="tabs" role="tablist">
-            <button type="button" class="tab is-active" data-mode="login" role="tab">Masuk</button>
-            <button type="button" class="tab" data-mode="register" role="tab">Daftar</button>
+            <button type="button" class="tab is-active" data-mode="login" role="tab" data-i18n="auth.tabLogin">
+              Masuk
+            </button>
+            <button type="button" class="tab" data-mode="register" role="tab" data-i18n="auth.tabRegister">
+              Daftar
+            </button>
           </div>
 
           <label class="field register-only">
-            <span>Nama lengkap</span>
+            <span data-i18n="auth.fullName">Nama lengkap</span>
             <input id="full_name" name="full_name" type="text" autocomplete="name" placeholder="Nuno Tamada" />
           </label>
 
@@ -106,6 +134,7 @@
               type="email"
               required
               autocomplete="email"
+              data-i18n-placeholder="auth.emailPlaceholder"
               placeholder="kamu@email.com"
             />
           </label>
@@ -119,6 +148,7 @@
               required
               minlength="8"
               autocomplete="current-password"
+              data-i18n-placeholder="auth.passwordPlaceholder"
               placeholder="Minimal 8 karakter"
             />
           </label>
@@ -141,50 +171,58 @@
           PulseCheck
         </a>
         <div class="topbar-right">
+          <div class="lang-switch" role="group" aria-label="Language">
+            <button type="button" class="lang-btn" data-lang="id">ID</button>
+            <button type="button" class="lang-btn" data-lang="en">EN</button>
+          </div>
           <span id="user-chip" class="user-chip">—</span>
-          <button type="button" class="btn btn-ghost" id="btn-logout">Keluar</button>
+          <button type="button" class="btn btn-ghost" id="btn-logout" data-i18n="nav.logout">Keluar</button>
         </div>
       </header>
 
       <main class="dash">
         <section class="dash-hero">
           <div>
-            <h2>Dashboard</h2>
-            <p>Ringkasan kesehatan semua monitor Anda.</p>
+            <h2 data-i18n="dash.title">Dashboard</h2>
+            <p data-i18n="dash.subtitle">Ringkasan kesehatan semua monitor Anda.</p>
           </div>
-          <button type="button" class="btn btn-primary" id="btn-open-create">+ Monitor baru</button>
+          <button type="button" class="btn btn-primary" id="btn-open-create" data-i18n="dash.newMonitor">
+            + Monitor baru
+          </button>
         </section>
 
-        <section class="stat-strip" aria-label="Ringkasan">
+        <section class="stat-strip" aria-label="Summary">
           <div class="stat">
-            <span class="stat-label">Total monitor</span>
+            <span class="stat-label" data-i18n="dash.statTotal">Total monitor</span>
             <strong id="stat-total">0</strong>
           </div>
           <div class="stat">
-            <span class="stat-label">Sedang up</span>
+            <span class="stat-label" data-i18n="dash.statUp">Sedang up</span>
             <strong id="stat-up" class="tone-up">0</strong>
           </div>
           <div class="stat">
-            <span class="stat-label">Sedang down</span>
+            <span class="stat-label" data-i18n="dash.statDown">Sedang down</span>
             <strong id="stat-down" class="tone-down">0</strong>
           </div>
           <div class="stat">
-            <span class="stat-label">Avg latency</span>
+            <span class="stat-label" data-i18n="dash.statLatency">Avg latency</span>
             <strong id="stat-latency">—</strong>
           </div>
         </section>
 
         <section class="settings-panel">
           <div class="section-head">
-            <h3>Auto-check & Discord alert</h3>
-            <span class="live-badge"><span class="live-dot"></span> Auto aktif</span>
+            <h3 data-i18n="settings.title">Auto-check & Discord alert</h3>
+            <span class="live-badge"
+              ><span class="live-dot"></span> <span data-i18n="settings.autoOn">Auto aktif</span></span
+            >
           </div>
-          <p class="settings-copy">
+          <p class="settings-copy" data-i18n="settings.copy">
             Monitor dicek otomatis sesuai interval. Isi Discord webhook supaya dapat notifikasi saat DOWN / recover.
           </p>
           <form id="webhook-form" class="webhook-form">
             <label class="field">
-              <span>Discord webhook URL</span>
+              <span data-i18n="settings.webhook">Discord webhook URL</span>
               <input
                 id="discord-webhook"
                 type="url"
@@ -192,9 +230,9 @@
               />
             </label>
             <div class="modal-actions">
-              <button type="submit" class="btn btn-secondary">Simpan webhook</button>
+              <button type="submit" class="btn btn-secondary" data-i18n="settings.saveWebhook">Simpan webhook</button>
             </div>
-            <p id="webhook-hint" class="auth-hint">
+            <p id="webhook-hint" class="auth-hint" data-i18n="settings.webhookHint">
               Di Discord: Channel Settings → Integrations → Webhooks → New Webhook → Copy URL
             </p>
           </form>
@@ -202,13 +240,17 @@
 
         <section class="monitors-section">
           <div class="section-head">
-            <h3>Monitor</h3>
-            <button type="button" class="btn btn-secondary btn-sm" id="btn-refresh">Refresh</button>
+            <h3 data-i18n="dash.monitors">Monitor</h3>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-refresh" data-i18n="dash.refresh">
+              Refresh
+            </button>
           </div>
           <div id="monitors-empty" class="empty-state" hidden>
-            <h4>Belum ada monitor</h4>
-            <p>Tambahkan URL pertama Anda untuk mulai memantau uptime.</p>
-            <button type="button" class="btn btn-primary" id="btn-empty-create">Tambah monitor</button>
+            <h4 data-i18n="dash.emptyTitle">Belum ada monitor</h4>
+            <p data-i18n="dash.emptyCopy">Tambahkan URL pertama Anda untuk mulai memantau uptime.</p>
+            <button type="button" class="btn btn-primary" id="btn-empty-create" data-i18n="dash.addMonitor">
+              Tambah monitor
+            </button>
           </div>
           <div id="monitors-list" class="monitors-list"></div>
         </section>
@@ -221,39 +263,45 @@
       <div class="drawer-panel" role="dialog" aria-modal="true" aria-labelledby="detail-title">
         <header class="drawer-head">
           <div>
-            <p class="eyebrow">Detail monitor</p>
+            <p class="eyebrow" data-i18n="detail.eyebrow">Detail monitor</p>
             <h3 id="detail-title">—</h3>
             <a id="detail-url" class="detail-url" href="#" target="_blank" rel="noopener">—</a>
           </div>
-          <button type="button" class="icon-btn" data-close-drawer aria-label="Tutup">×</button>
+          <button type="button" class="icon-btn" data-close-drawer data-i18n-aria="common.close" aria-label="Tutup">
+            ×
+          </button>
         </header>
 
         <div class="detail-stats">
           <div>
-            <span>Uptime</span>
+            <span data-i18n="detail.uptime">Uptime</span>
             <strong id="detail-uptime">—</strong>
           </div>
           <div>
-            <span>Avg latency</span>
+            <span data-i18n="detail.avgLatency">Avg latency</span>
             <strong id="detail-latency">—</strong>
           </div>
           <div>
-            <span>Last status</span>
+            <span data-i18n="detail.lastStatus">Last status</span>
             <strong id="detail-status">—</strong>
           </div>
           <div>
-            <span>Total checks</span>
+            <span data-i18n="detail.totalChecks">Total checks</span>
             <strong id="detail-checks">—</strong>
           </div>
         </div>
+        <p class="tz-hint" data-i18n="detail.checksHint">Termasuk auto-check tiap interval.</p>
 
         <div class="drawer-actions">
-          <button type="button" class="btn btn-primary" id="btn-run-check">Jalankan check</button>
-          <button type="button" class="btn btn-danger" id="btn-delete-monitor">Hapus</button>
+          <button type="button" class="btn btn-primary" id="btn-run-check" data-i18n="detail.runCheck">
+            Jalankan check
+          </button>
+          <button type="button" class="btn btn-danger" id="btn-delete-monitor" data-i18n="detail.delete">Hapus</button>
         </div>
 
         <div class="history">
-          <h4>Riwayat check</h4>
+          <h4 data-i18n="detail.history">Riwayat check</h4>
+          <p class="tz-hint" data-i18n="detail.tzHint">Waktu = zona lokal perangkat Anda.</p>
           <div id="checks-list" class="checks-list"></div>
         </div>
       </div>
@@ -264,13 +312,22 @@
       <div class="modal-backdrop" data-close-modal></div>
       <form id="create-form" class="modal-panel" role="dialog" aria-modal="true">
         <header class="modal-head">
-          <h3>Monitor baru</h3>
-          <button type="button" class="icon-btn" data-close-modal aria-label="Tutup">×</button>
+          <h3 data-i18n="create.title">Monitor baru</h3>
+          <button type="button" class="icon-btn" data-close-modal data-i18n-aria="common.close" aria-label="Tutup">
+            ×
+          </button>
         </header>
 
         <label class="field">
-          <span>Nama</span>
-          <input id="monitor-name" name="name" required maxlength="120" placeholder="Landing page" />
+          <span data-i18n="create.name">Nama</span>
+          <input
+            id="monitor-name"
+            name="name"
+            required
+            maxlength="120"
+            data-i18n-placeholder="create.namePlaceholder"
+            placeholder="Landing page"
+          />
         </label>
         <label class="field">
           <span>URL</span>
@@ -279,16 +336,17 @@
             name="url"
             type="url"
             required
+            data-i18n-placeholder="create.urlPlaceholder"
             placeholder="https://contoh.com"
           />
         </label>
         <div class="field-row">
           <label class="field">
-            <span>Interval (detik)</span>
+            <span data-i18n="create.interval">Interval (detik)</span>
             <input id="monitor-interval" name="interval_seconds" type="number" min="30" max="3600" value="60" />
           </label>
           <label class="field">
-            <span>Expected status</span>
+            <span data-i18n="create.expected">Expected status</span>
             <input id="monitor-status" name="expected_status" type="number" min="100" max="599" value="200" />
           </label>
         </div>
@@ -296,14 +354,15 @@
         <p id="create-error" class="form-error" hidden></p>
 
         <div class="modal-actions">
-          <button type="button" class="btn btn-secondary" data-close-modal>Batal</button>
-          <button type="submit" class="btn btn-primary">Simpan</button>
+          <button type="button" class="btn btn-secondary" data-close-modal data-i18n="common.cancel">Batal</button>
+          <button type="submit" class="btn btn-primary" data-i18n="common.save">Simpan</button>
         </div>
       </form>
     </div>
 
     <div id="toast" class="toast" hidden></div>
 
+    <script src="/static/js/i18n.js" defer></script>
     <script src="/static/js/app.js" defer></script>
   </body>
 </html>

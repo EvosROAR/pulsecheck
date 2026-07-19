@@ -1,6 +1,14 @@
-from datetime import datetime
+from datetime import UTC, datetime
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, HttpUrl
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, HttpUrl, field_serializer
+
+
+def _to_utc_iso(value: datetime | None) -> str | None:
+    if value is None:
+        return None
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=UTC)
+    return value.astimezone(UTC).isoformat().replace("+00:00", "Z")
 
 
 class Token(BaseModel):
@@ -32,6 +40,10 @@ class UserRead(BaseModel):
     is_active: bool
     discord_webhook_url: str | None = None
     created_at: datetime
+
+    @field_serializer("created_at")
+    def serialize_created_at(self, value: datetime) -> str:
+        return _to_utc_iso(value)  # type: ignore[return-value]
 
 
 class UserUpdate(BaseModel):
@@ -66,6 +78,10 @@ class MonitorRead(BaseModel):
     created_at: datetime
     owner_id: int
 
+    @field_serializer("created_at")
+    def serialize_created_at(self, value: datetime) -> str:
+        return _to_utc_iso(value)  # type: ignore[return-value]
+
 
 class CheckResultRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -77,6 +93,10 @@ class CheckResultRead(BaseModel):
     response_time_ms: float | None
     error_message: str | None
     checked_at: datetime
+
+    @field_serializer("checked_at")
+    def serialize_checked_at(self, value: datetime) -> str:
+        return _to_utc_iso(value)  # type: ignore[return-value]
 
 
 class MonitorStats(BaseModel):
@@ -90,6 +110,10 @@ class MonitorStats(BaseModel):
     avg_response_time_ms: float | None
     last_status: str | None
     last_checked_at: datetime | None
+
+    @field_serializer("last_checked_at")
+    def serialize_last_checked_at(self, value: datetime | None) -> str | None:
+        return _to_utc_iso(value)
 
 
 class HealthResponse(BaseModel):

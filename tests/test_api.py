@@ -82,6 +82,7 @@ async def test_dashboard_home(client: AsyncClient) -> None:
     response = await client.get("/")
     assert response.status_code == 200
     assert "PulseCheck" in response.text
+    assert "/static/js/i18n.js" in response.text
 
 
 @pytest.mark.asyncio

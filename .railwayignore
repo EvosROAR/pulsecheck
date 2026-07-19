@@ -1,0 +1,8 @@
+# Runtime / OS
+.env
+.venv/
+__pycache__/
+*.db
+.pytest_cache/
+.ruff_cache/
+data/

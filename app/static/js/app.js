@@ -1,6 +1,10 @@
 const API = "/api/v1";
 const TOKEN_KEY = "pulsecheck_token";
 
+function t(key, vars) {
+  return window.PulseI18n ? window.PulseI18n.t(key, vars) : key;
+}
+
 const state = {
   mode: "login",
   token: localStorage.getItem(TOKEN_KEY),
@@ -65,11 +69,9 @@ function setAuthMode(mode) {
     tab.classList.toggle("is-active", tab.dataset.mode === mode);
   });
   const isLogin = mode === "login";
-  els.authTitle.textContent = isLogin ? "Masuk ke dashboard" : "Buat akun PulseCheck";
-  els.authSubtitle.textContent = isLogin
-    ? "Pantau monitor Anda dan jalankan pengecekan uptime kapan saja."
-    : "Daftar gratis, lalu tambahkan URL pertama Anda dalam hitungan detik.";
-  els.authSubmit.textContent = isLogin ? "Masuk" : "Daftar";
+  els.authTitle.textContent = t(isLogin ? "auth.titleLogin" : "auth.titleRegister");
+  els.authSubtitle.textContent = t(isLogin ? "auth.subLogin" : "auth.subRegister");
+  els.authSubmit.textContent = t(isLogin ? "auth.submitLogin" : "auth.submitRegister");
   document.getElementById("password").autocomplete = isLogin
     ? "current-password"
     : "new-password";
@@ -95,7 +97,7 @@ async function api(path, options = {}) {
     const detail = data.detail;
     const message = Array.isArray(detail)
       ? detail.map((d) => d.msg).join(", ")
-      : detail || "Terjadi kesalahan";
+      : detail || t("common.error");
     throw new Error(message);
   }
   return data;
@@ -187,7 +189,9 @@ function renderDashboard() {
       </div>
       <div class="monitor-side">
         <span class="badge ${status}">${status}</span>
-        <small>${s ? `${s.uptime_percentage}% uptime` : "Belum ada check"}</small>
+        <small>${
+          s ? t("dash.uptime", { n: s.uptime_percentage }) : t("dash.noChecksYet")
+        }</small>
       </div>
     `;
     card.addEventListener("click", () => openDetail(m.id));
@@ -201,6 +205,25 @@ function escapeHtml(value) {
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;");
+}
+
+/** Parse API timestamps (UTC) and show them in the viewer's local timezone. */
+function formatUserTime(value) {
+  if (!value) return "—";
+  let raw = String(value).trim();
+  if (!/[zZ]$|[+-]\d{2}:\d{2}$/.test(raw)) {
+    raw = `${raw}Z`;
+  }
+  const date = new Date(raw);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return date.toLocaleString(undefined, {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
 }
 
 async function openDetail(id) {
@@ -227,7 +250,7 @@ async function openDetail(id) {
   els.checksList.innerHTML = checks.length
     ? checks
         .map((c) => {
-          const when = new Date(c.checked_at).toLocaleString("id-ID");
+          const when = formatUserTime(c.checked_at);
           const rt = c.response_time_ms != null ? `${Math.round(c.response_time_ms)} ms` : "—";
           return `
             <div class="check-row">
@@ -240,7 +263,7 @@ async function openDetail(id) {
           `;
         })
         .join("")
-    : `<p class="auth-hint">Belum ada riwayat. Jalankan check pertama.</p>`;
+    : `<p class="auth-hint">${t("detail.noHistory")}</p>`;
 
   els.drawer.classList.add("is-open");
   els.drawer.setAttribute("aria-hidden", "false");
@@ -318,12 +341,12 @@ els.authForm.addEventListener("submit", async (event) => {
   try {
     els.authSubmit.disabled = true;
     if (state.mode === "register") {
-      if (!fullName) throw new Error("Nama lengkap wajib diisi");
+      if (!fullName) throw new Error(t("auth.needName"));
       await register(email, password, fullName);
     }
     await login(email, password);
     await enterDashboard();
-    showToast("Selamat datang di PulseCheck");
+    showToast(t("toast.welcome"));
   } catch (err) {
     els.authError.textContent = err.message;
     els.authError.hidden = false;
@@ -338,14 +361,14 @@ document.getElementById("btn-logout").addEventListener("click", () => {
   state.monitors = [];
   localStorage.removeItem(TOKEN_KEY);
   showView("landing");
-  showToast("Anda sudah keluar");
+  showToast(t("toast.logout"));
 });
 
 document.getElementById("btn-open-create").addEventListener("click", openCreateModal);
 document.getElementById("btn-empty-create").addEventListener("click", openCreateModal);
 document.getElementById("btn-refresh").addEventListener("click", async () => {
   await loadMonitors();
-  showToast("Dashboard diperbarui");
+  showToast(t("toast.refreshed"));
 });
 
 document.querySelectorAll("[data-close-modal]").forEach((node) => {
@@ -369,7 +392,7 @@ els.createForm.addEventListener("submit", async (event) => {
     await api("/monitors", { method: "POST", json: payload });
     closeCreateModal();
     await loadMonitors();
-    showToast("Monitor ditambahkan");
+    showToast(t("toast.monitorAdded"));
   } catch (err) {
     els.createError.textContent = err.message;
     els.createError.hidden = false;
@@ -390,12 +413,12 @@ document.getElementById("btn-run-check").addEventListener("click", async () => {
 
 document.getElementById("btn-delete-monitor").addEventListener("click", async () => {
   if (!state.selectedId) return;
-  if (!confirm("Hapus monitor ini?")) return;
+  if (!confirm(t("detail.deleteConfirm"))) return;
   try {
     await api(`/monitors/${state.selectedId}`, { method: "DELETE" });
     closeDrawer();
     await loadMonitors();
-    showToast("Monitor dihapus");
+    showToast(t("toast.monitorDeleted"));
   } catch (err) {
     showToast(err.message);
   }
@@ -410,11 +433,19 @@ document.getElementById("webhook-form").addEventListener("submit", async (event)
       json: { discord_webhook_url },
     });
     document.getElementById("discord-webhook").value = state.user.discord_webhook_url || "";
-    showToast(discord_webhook_url ? "Webhook Discord disimpan" : "Webhook dihapus");
+    showToast(discord_webhook_url ? t("toast.webhookSaved") : t("toast.webhookCleared"));
   } catch (err) {
     showToast(err.message);
   }
 });
+
+window.onLocaleChange = () => {
+  setAuthMode(state.mode);
+  renderDashboard();
+  if (state.selectedId) {
+    openDetail(state.selectedId);
+  }
+};
 
 setAuthMode("login");
 boot();
