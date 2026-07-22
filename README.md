@@ -15,7 +15,7 @@ Monitor any URL, trigger health checks, track response times, and get uptime sta
 PulseCheck showcases production-minded Python backend skills:
 
 - FastAPI + Pydantic v2 for typed request/response models
-- Async SQLAlchemy 2.0 + SQLite (aiosqlite)
+- Async SQLAlchemy 2.0 + SQLite locally / PostgreSQL in production
 - JWT authentication (register / login / protected routes)
 - Service-layer architecture (routers → services → models)
 - httpx-based async URL probing with timeout handling
@@ -29,11 +29,14 @@ PulseCheck showcases production-minded Python backend skills:
 | Feature | Description |
 |---|---|
 | Dashboard UI | Landing page, auth, monitor dashboard, detail drawer (ID/EN) |
-| Auto-check | Background scheduler probes monitors by interval |
-| Discord alerts | Webhook notify on DOWN / RECOVERED |
+| Auto-check | Parallel background scheduler probes monitors by interval |
+| Smart Discord alerts | Confirm after 2 fails, recovery, SSL expiry warnings |
+| Incidents | Downtime timeline grouped from consecutive failures |
 | Probe insights | DNS, SSL expiry, IP, CDN, tech stack, security headers |
 | Keyword check | Optional body keyword that must appear in the response |
 | Period stats | Uptime 24h / 7d, avg + p95 latency, sparkline |
+| Batch stats | Single `/monitors/stats/summary` for fast dashboards |
+| Retention | Auto-purge check history older than 30 days |
 | Pause / resume | Temporarily stop auto-checks per monitor |
 | Check all | Trigger every active monitor on demand |
 | CSV export | Download check history for a monitor |

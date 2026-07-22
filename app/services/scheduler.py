@@ -11,6 +11,7 @@ from app.core.config import get_settings
 from app.core.database import AsyncSessionLocal
 from app.models import CheckResult, Monitor
 from app.services.monitors import run_check
+from app.services.retention import purge_old_checks
 
 logger = logging.getLogger("pulsecheck.scheduler")
 
@@ -46,20 +47,54 @@ async def _due_monitors(session) -> list[Monitor]:
     return due
 
 
+async def _run_one(monitor_id: int) -> None:
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(
+            select(Monitor)
+            .where(Monitor.id == monitor_id)
+            .options(selectinload(Monitor.owner))
+        )
+        monitor = result.scalar_one_or_none()
+        if monitor is None or not monitor.is_active:
+            return
+        await run_check(session, monitor, notify=True)
+        logger.info("Auto-checked monitor id=%s name=%s", monitor.id, monitor.name)
+
+
 async def scheduler_loop(stop_event: asyncio.Event) -> None:
     settings = get_settings()
-    logger.info("Auto-check scheduler started (tick=%ss)", settings.scheduler_tick_seconds)
+    logger.info(
+        "Auto-check scheduler started (tick=%ss, concurrency=%s)",
+        settings.scheduler_tick_seconds,
+        settings.scheduler_concurrency,
+    )
+    ticks = 0
 
     while not stop_event.is_set():
         try:
             async with AsyncSessionLocal() as session:
                 due = await _due_monitors(session)
-                for monitor in due:
-                    try:
-                        await run_check(session, monitor, notify=True)
-                        logger.info("Auto-checked monitor id=%s name=%s", monitor.id, monitor.name)
-                    except Exception:
-                        logger.exception("Failed auto-check for monitor id=%s", monitor.id)
+                due_ids = [m.id for m in due]
+
+            if due_ids:
+                sem = asyncio.Semaphore(max(1, settings.scheduler_concurrency))
+
+                async def _guarded(mid: int) -> None:
+                    async with sem:
+                        try:
+                            await _run_one(mid)
+                        except Exception:
+                            logger.exception("Failed auto-check for monitor id=%s", mid)
+
+                await asyncio.gather(*[_guarded(mid) for mid in due_ids])
+
+            ticks += 1
+            # Purge old history about once per hour (depending on tick).
+            if ticks % max(1, int(3600 / max(1, settings.scheduler_tick_seconds))) == 0:
+                try:
+                    await purge_old_checks()
+                except Exception:
+                    logger.exception("Retention purge failed")
         except Exception:
             logger.exception("Scheduler tick failed")
 

@@ -49,6 +49,23 @@ def _migrate_schema(connection) -> None:
                 )
             except Exception:  # noqa: BLE001 - sqlite/postgres dialect differences
                 pass
+        if "last_alert_kind" not in columns:
+            connection.execute(text("ALTER TABLE monitors ADD COLUMN last_alert_kind VARCHAR(32)"))
+        if "last_alert_at" not in columns:
+            connection.execute(text("ALTER TABLE monitors ADD COLUMN last_alert_at TIMESTAMP"))
+        if "last_ssl_alert_at" not in columns:
+            connection.execute(text("ALTER TABLE monitors ADD COLUMN last_ssl_alert_at TIMESTAMP"))
+
+    if "check_results" in tables:
+        try:
+            connection.execute(
+                text(
+                    "CREATE INDEX IF NOT EXISTS ix_check_results_monitor_checked_at "
+                    "ON check_results (monitor_id, checked_at)"
+                )
+            )
+        except Exception:  # noqa: BLE001
+            pass
 
 
 async def init_db() -> None:

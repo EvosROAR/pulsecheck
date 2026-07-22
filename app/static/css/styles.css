@@ -942,6 +942,15 @@ body.mode-register .register-only {
   margin: 0 0 1.1rem;
 }
 
+.incidents {
+  margin: 0 0 1.1rem;
+}
+
+.incidents h4 {
+  margin: 0 0 0.65rem;
+  font-family: var(--font-display);
+}
+
 .insights h4 {
   margin: 0 0 0.65rem;
   font-family: var(--font-display);

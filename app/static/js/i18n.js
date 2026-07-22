@@ -41,7 +41,7 @@ const I18N = {
     "settings.title": "Auto-check & Discord alert",
     "settings.autoOn": "Auto aktif",
     "settings.copy":
-      "Monitor dicek otomatis sesuai interval. Isi Discord webhook supaya dapat notifikasi saat DOWN / recover.",
+      "Monitor dicek otomatis sesuai interval. Alert Discord pakai konfirmasi 2x fail + peringatan SSL.",
     "settings.probeNote":
       "Dicek dari server monitoring ({region}), bukan dari PC Anda. Hasil browser bisa beda karena jaringan/WAF.",
     "settings.webhook": "Discord webhook URL",
@@ -59,6 +59,10 @@ const I18N = {
     "detail.latencyChart": "Latency (terbaru)",
     "detail.insightsTitle": "Detail probe",
     "detail.insightsEmpty": "Jalankan check untuk melihat DNS, SSL, IP, CDN, dan security headers.",
+    "detail.incidentsTitle": "Incidents",
+    "detail.noIncidents": "Belum ada incident downtime.",
+    "detail.incidentOngoing": "ongoing",
+    "detail.incidentDuration": "{n}",
     "detail.runCheck": "Jalankan check",
     "detail.pause": "Pause",
     "detail.resume": "Resume",
@@ -136,7 +140,7 @@ const I18N = {
     "settings.title": "Auto-check & Discord alerts",
     "settings.autoOn": "Auto on",
     "settings.copy":
-      "Monitors are checked automatically by interval. Add a Discord webhook to get DOWN / recovery alerts.",
+      "Monitors are checked automatically by interval. Discord alerts use 2-fail confirmation plus SSL warnings.",
     "settings.probeNote":
       "Checked from the monitoring server ({region}), not your PC. Browser results can differ due to network/WAF.",
     "settings.webhook": "Discord webhook URL",
@@ -154,6 +158,10 @@ const I18N = {
     "detail.latencyChart": "Latency (recent)",
     "detail.insightsTitle": "Probe insights",
     "detail.insightsEmpty": "Run a check to see DNS, SSL, IP, CDN, and security headers.",
+    "detail.incidentsTitle": "Incidents",
+    "detail.noIncidents": "No downtime incidents yet.",
+    "detail.incidentOngoing": "ongoing",
+    "detail.incidentDuration": "{n}",
     "detail.runCheck": "Run check",
     "detail.pause": "Pause",
     "detail.resume": "Resume",

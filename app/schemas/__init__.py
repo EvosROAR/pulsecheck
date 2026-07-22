@@ -216,3 +216,23 @@ class MetaResponse(BaseModel):
 class CheckAllResponse(BaseModel):
     checked: int
     results: list[CheckResultRead]
+
+
+class IncidentRead(BaseModel):
+    started_at: datetime
+    ended_at: datetime | None = None
+    duration_seconds: int | None = None
+    failed_checks: int
+    status_code: int | None = None
+    status_label: str
+    status_tone: str
+    error_message: str | None = None
+    is_ongoing: bool = False
+
+    @field_serializer("started_at")
+    def serialize_started_at(self, value: datetime) -> str:
+        return _to_utc_iso(value)  # type: ignore[return-value]
+
+    @field_serializer("ended_at")
+    def serialize_ended_at(self, value: datetime | None) -> str | None:
+        return _to_utc_iso(value)

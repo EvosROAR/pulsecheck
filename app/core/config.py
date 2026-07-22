@@ -27,6 +27,13 @@ class Settings(BaseSettings):
     default_interval_seconds: int = 60
     scheduler_enabled: bool = True
     scheduler_tick_seconds: int = 15
+    scheduler_concurrency: int = 5
+    # Alert only after N consecutive failures (reduces flapping noise).
+    alert_confirmations: int = 2
+    alert_cooldown_seconds: int = 300
+    ssl_warn_days: int = 14
+    # Delete check history older than this many days (0 = keep forever).
+    check_retention_days: int = 30
     # Shown in UI so users know checks run from the server, not their PC.
     probe_region: str = "local"
     cors_origins: list[str] = ["*"]

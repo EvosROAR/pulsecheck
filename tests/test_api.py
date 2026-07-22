@@ -195,6 +195,61 @@ async def test_update_discord_webhook(client: AsyncClient) -> None:
     assert invalid.status_code == 422
 
 
+@pytest.mark.asyncio
+async def test_batch_stats_and_incidents(client: AsyncClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    token = await _register_and_login(client)
+    headers = {"Authorization": f"Bearer {token}"}
+
+    created = await client.post(
+        "/api/v1/monitors",
+        headers=headers,
+        json={
+            "name": "Example",
+            "url": "https://example.com",
+            "interval_seconds": 60,
+            "expected_status": 200,
+        },
+    )
+    assert created.status_code == 201
+    monitor_id = created.json()["id"]
+
+    up = await client.post(f"/api/v1/monitors/{monitor_id}/check", headers=headers)
+    assert up.status_code == 200
+
+    summary = await client.get("/api/v1/monitors/stats/summary", headers=headers)
+    assert summary.status_code == 200
+    assert len(summary.json()) == 1
+    assert summary.json()[0]["monitor_id"] == monitor_id
+
+    async def down_probe(
+        url: str,
+        expected_status: int = 200,
+        *,
+        expected_body_contains: str | None = None,
+    ) -> ProbeResult:
+        return ProbeResult(
+            is_up=False,
+            status_code=403,
+            response_time_ms=18.0,
+            error_message=f"Expected status {expected_status}, got 403",
+            status_info=StatusInfo("forbidden", "FORBIDDEN", "warn"),
+            final_url=url,
+            keyword_matched=None,
+        )
+
+    monkeypatch.setattr("app.services.monitors.probe_url", down_probe)
+    assert (await client.post(f"/api/v1/monitors/{monitor_id}/check", headers=headers)).status_code == 200
+    assert (await client.post(f"/api/v1/monitors/{monitor_id}/check", headers=headers)).status_code == 200
+
+    incidents = await client.get(f"/api/v1/monitors/{monitor_id}/incidents", headers=headers)
+    assert incidents.status_code == 200
+    body = incidents.json()
+    assert len(body) >= 1
+    assert body[0]["is_ongoing"] is True
+    assert body[0]["failed_checks"] >= 2
+    assert body[0]["status_label"] == "FORBIDDEN"
+
+
 def test_alert_kind_transitions() -> None:
     assert _alert_kind(None, True) is None
     assert _alert_kind(None, False) == "down"

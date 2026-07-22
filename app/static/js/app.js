@@ -157,18 +157,12 @@ async function loadMe() {
 }
 
 async function loadMonitors() {
-  state.monitors = await api("/monitors");
-  const stats = await Promise.all(
-    state.monitors.map(async (m) => {
-      try {
-        const s = await api(`/monitors/${m.id}/stats`);
-        return [m.id, s];
-      } catch {
-        return [m.id, null];
-      }
-    }),
-  );
-  state.statsById = Object.fromEntries(stats);
+  const [monitors, stats] = await Promise.all([
+    api("/monitors"),
+    api("/monitors/stats/summary"),
+  ]);
+  state.monitors = monitors;
+  state.statsById = Object.fromEntries((stats || []).map((s) => [s.monitor_id, s]));
   renderDashboard();
 }
 
@@ -329,6 +323,44 @@ function renderInsights(details) {
     .join("");
 }
 
+function formatDuration(seconds) {
+  if (seconds == null) return "—";
+  if (seconds < 60) return `${seconds}s`;
+  const mins = Math.floor(seconds / 60);
+  if (mins < 60) return `${mins}m`;
+  const hours = Math.floor(mins / 60);
+  const rem = mins % 60;
+  return rem ? `${hours}h ${rem}m` : `${hours}h`;
+}
+
+function renderIncidents(incidents) {
+  const list = document.getElementById("incidents-list");
+  if (!list) return;
+  if (!incidents.length) {
+    list.innerHTML = `<p class="auth-hint">${t("detail.noIncidents")}</p>`;
+    return;
+  }
+  list.innerHTML = incidents
+    .map((item) => {
+      const tone = item.status_tone || "down";
+      const label = item.status_label || "DOWN";
+      const when = formatUserTime(item.started_at);
+      const dur = item.is_ongoing
+        ? t("detail.incidentOngoing")
+        : t("detail.incidentDuration", { n: formatDuration(item.duration_seconds) });
+      return `
+        <div class="check-row">
+          <div>
+            <strong class="tone-${tone}">${escapeHtml(label)}</strong>
+            <small> · ${item.failed_checks} checks · ${escapeHtml(dur)}</small>
+          </div>
+          <small>${when}</small>
+        </div>
+      `;
+    })
+    .join("");
+}
+
 function renderSparkline(checks) {
   const svg = els.sparkline;
   if (!svg) return;
@@ -394,9 +426,10 @@ async function openDetail(id) {
   els.detailUrl.href = monitor.url;
   syncDetailActions(monitor);
 
-  const [stats, checks] = await Promise.all([
+  const [stats, checks, incidents] = await Promise.all([
     api(`/monitors/${id}/stats`),
     api(`/monitors/${id}/checks?limit=24`),
+    api(`/monitors/${id}/incidents?limit=10`),
   ]);
   state.statsById[id] = stats;
 
@@ -411,6 +444,7 @@ async function openDetail(id) {
   els.detailChecks.textContent = String(stats.total_checks);
   renderInsights(stats.last_insights || checks.find((c) => c.details)?.details || null);
   renderSparkline(checks);
+  renderIncidents(incidents || []);
 
   els.checksList.innerHTML = checks.length
     ? checks

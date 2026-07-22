@@ -91,9 +91,17 @@ async def run_check(
         if owner is None:
             owner_result = await db.execute(select(User).where(User.id == monitor.owner_id))
             owner = owner_result.scalar_one_or_none()
-        await maybe_alert_owner(owner, monitor, result, previous_up)
+        await maybe_alert_owner(db, owner, monitor, result, previous_up)
 
     return result
+
+
+async def get_stats_for_owner(db: AsyncSession, owner_id: int) -> list[MonitorStats]:
+    result = await db.execute(
+        select(Monitor).where(Monitor.owner_id == owner_id).order_by(Monitor.created_at.desc())
+    )
+    monitors = list(result.scalars().all())
+    return [await get_monitor_stats(db, monitor) for monitor in monitors]
 
 
 async def get_monitor_stats(db: AsyncSession, monitor: Monitor) -> MonitorStats:

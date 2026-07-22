@@ -12,17 +12,20 @@ from app.models import CheckResult, Monitor, User
 from app.schemas import (
     CheckAllResponse,
     CheckResultRead,
+    IncidentRead,
     MonitorCreate,
     MonitorRead,
     MonitorStats,
     MonitorUpdate,
     PublicMonitorStatus,
 )
+from app.services.incidents import get_incidents
 from app.services.monitors import (
     apply_public_enabled,
     get_monitor_stats,
     get_monitor_with_owner,
     get_public_status,
+    get_stats_for_owner,
     run_check,
     run_checks_for_owner,
 )
@@ -77,6 +80,14 @@ async def check_all_monitors(
 ) -> CheckAllResponse:
     results = await run_checks_for_owner(db, current_user.id)
     return CheckAllResponse(checked=len(results), results=results)
+
+
+@router.get("/stats/summary", response_model=list[MonitorStats])
+async def stats_summary(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> list[MonitorStats]:
+    return await get_stats_for_owner(db, current_user.id)
 
 
 @router.get("/{monitor_id}", response_model=MonitorRead)
@@ -202,6 +213,17 @@ async def monitor_stats(
 ) -> MonitorStats:
     monitor = await _get_owned_monitor(db, monitor_id, current_user)
     return await get_monitor_stats(db, monitor)
+
+
+@router.get("/{monitor_id}/incidents", response_model=list[IncidentRead])
+async def monitor_incidents(
+    monitor_id: int,
+    limit: int = Query(default=20, ge=1, le=100),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> list[IncidentRead]:
+    await _get_owned_monitor(db, monitor_id, current_user)
+    return await get_incidents(db, monitor_id, limit=limit)
 
 
 @public_router.get("/status/{slug}", response_model=PublicMonitorStatus)

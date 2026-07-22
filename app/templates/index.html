@@ -220,9 +220,8 @@
             >
           </div>
           <p class="settings-copy" data-i18n="settings.copy">
-            Monitor dicek otomatis sesuai interval. Isi Discord webhook supaya dapat notifikasi saat DOWN / recover.
-          </p>
-          <p class="probe-note" id="probe-note">
+            Monitor dicek otomatis sesuai interval. Alert Discord pakai konfirmasi 2x fail + peringatan SSL.
+          </p>          <p class="probe-note" id="probe-note">
             Checks run from the monitoring server, not your PC.
           </p>
           <form id="webhook-form" class="webhook-form">
@@ -318,6 +317,11 @@
           <h4 data-i18n="detail.insightsTitle">Probe insights</h4>
           <div id="insights-grid" class="insights-grid"></div>
           <p id="insights-error" class="settings-copy" hidden></p>
+        </section>
+
+        <section class="incidents" aria-label="Incidents">
+          <h4 data-i18n="detail.incidentsTitle">Incidents</h4>
+          <div id="incidents-list" class="checks-list"></div>
         </section>
 
         <div class="drawer-actions">
